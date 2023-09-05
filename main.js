@@ -6,6 +6,8 @@
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/voitures/*
 // @match        https://www.leboncoin.fr/offre/voitures/*
+// @match        https://www.leboncoin.fr/motos/*
+// @match        https://www.leboncoin.fr/offre/motos/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=leboncoin.fr
 // @grant        none
 // ==/UserScript==

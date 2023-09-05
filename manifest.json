@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Price History 4 LBC",
-    "version": "1.0.0",
+    "version": "1.0.1",
   
     "description": "Extension permettant d'afficher l'ancien prix de vente d'une voiture sur le site LeBonCoin",
   
@@ -11,7 +11,12 @@
     },
     "content_scripts": [
         {
-            "matches": ["*://*.leboncoin.fr/voitures/*", "*://*.leboncoin.fr/offre/voitures/*"],
+            "matches": [
+                "*://*.leboncoin.fr/voitures/*", 
+                "*://*.leboncoin.fr/offre/voitures/*",
+                "*://*.leboncoin.fr/motos/*", 
+                "*://*.leboncoin.fr/offre/motos/*"
+            ],
             "js" : ["main.js"]
         }
     ]

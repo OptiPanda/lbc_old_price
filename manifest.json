@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "Price History 4 LBC",
+    "version": "1.0.0",
+  
+    "description": "Extension permettant d'afficher l'ancien prix de vente d'une voiture sur le site LeBonCoin",
+  
+    "homepage_url": "https://github.com/OptiPanda/lbc_old_price",
+    "icons": {
+        "48": "icons/icon48.png"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*.leboncoin.fr/voitures/*", "*://*.leboncoin.fr/offre/voitures/*"],
+            "js" : ["main.js"]
+        }
+    ]
+}

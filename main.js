@@ -1,13 +1,11 @@
 // ==UserScript==
-// @name         Show old price of car on LeBonCoin
+// @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Add visible information to user of the old price of the car
+// @version      1.0.2
+// @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
-// @match        https://www.leboncoin.fr/voitures/*
-// @match        https://www.leboncoin.fr/offre/voitures/*
-// @match        https://www.leboncoin.fr/motos/*
-// @match        https://www.leboncoin.fr/offre/motos/*
+// @match        https://www.leboncoin.fr/*/*
+// @match        https://www.leboncoin.fr/offre/*/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=leboncoin.fr
 // @grant        none
 // ==/UserScript==

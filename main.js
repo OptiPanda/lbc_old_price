@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2
+// @version      1.0.3
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -12,13 +12,20 @@
 
 (function() {
     'use strict';
-    const oldPrice = JSON.parse(document.getElementById("__NEXT_DATA__").innerHTML).props.pageProps.ad.attributes.filter(o => o.key === 'old_price')[0]?.value;
+    
+    doYourThing();
+})();
+
+function doYourThing() {
+
+    const jsonDatas = JSON.parse(document.getElementById("__NEXT_DATA__").innerHTML)
+    const oldPrice = jsonDatas?.props.pageProps.ad.attributes.filter(o => o.key === 'old_price')[0]?.value;
 
     if(!oldPrice) {
      return;
     }
 
-    const currentPrice = JSON.parse(document.getElementById("__NEXT_DATA__").innerHTML).props.pageProps.ad.price;
+    const currentPrice = jsonDatas?.props.pageProps.ad.price;
 
     const exist = document.getElementById("old_price_to_display");
     exist && document.removeChild(exist);
@@ -49,7 +56,7 @@
 
     divOldPrice.appendChild(divDiff);
 
-    const parent = document.querySelector('[data-qa-id="adview_spotlight_description_container"] > div > div[data-qa-id="adview_price"]');
+    const parent = document.querySelector('article div[data-qa-id="adview_price"]');
     parent.insertBefore(divOldPrice, parent.firstChild);
     parent.removeChild(svgArrow);
-})();
+}

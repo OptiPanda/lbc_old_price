@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      1.0.3
+// @version      2.0.0
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -10,23 +10,45 @@
 // @grant        none
 // ==/UserScript==
 
+if (typeof browser !== "undefined") {
+    browser.runtime.onMessage.addListener(
+        function(request, sender, sendResponse) {
+            if (request.message === 'lbc_old_price') {
+                setTimeout(() => applyOldPrice(getPostId()), 1000);
+            }
+        }
+    );
+}
+
 (function() {
     'use strict';
-    
-    doYourThing();
+    setTimeout(() => applyOldPrice(getPostId()), 1000);
 })();
 
-function doYourThing() {
+async function applyOldPrice(postId) {
 
-    const jsonDatas = JSON.parse(document.getElementById("__NEXT_DATA__").innerHTML)
-    const oldPrice = jsonDatas?.props.pageProps.ad.attributes.filter(o => o.key === 'old_price')[0]?.value;
-
-    if(!oldPrice) {
-     return;
+    if (!document.querySelector("article")) {
+        console.log("Not an article");
+        return;
     }
 
-    const currentPrice = jsonDatas?.props.pageProps.ad.price;
+    const rawDatas = await getApiData(postId);
+    const datas = JSON.parse(rawDatas);
+    const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 
+    if (!oldPrice) {
+        console.log("no old price");
+        return;
+    }
+
+    const currentPrice = datas?.price[0];
+
+    displayOldPrice(oldPrice, currentPrice);
+
+    console.log("old price ajouté");
+}
+
+function displayOldPrice(oldPrice, currentPrice) {
     const exist = document.getElementById("old_price_to_display");
     exist && document.removeChild(exist);
 
@@ -39,7 +61,6 @@ function doYourThing() {
     pOldPrice.innerHTML = oldPrice.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
 
     divOldPrice.appendChild(pOldPrice);
-
     const divDiff = document.createElement("div");
     divDiff.setAttribute("class", "flex flex-col items-center");
 
@@ -47,9 +68,9 @@ function doYourThing() {
     pDiff.innerHTML = "(" + (""+(+currentPrice - +oldPrice)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €)";
     pDiff.setAttribute("class", "text-subhead mr-md");
 
-    const svgArrow = document.querySelector('[data-title="baisse de prix"]');
-    svgArrow.classList.remove("ml-md");
-    svgArrow.classList.remove("text-success");
+    const svgArrow = document.querySelector('svg[data-title="baisse de prix"]');
+    svgArrow?.classList?.remove("ml-md");
+    svgArrow?.classList?.remove("text-success");
 
     divDiff.appendChild(pDiff);
     divDiff.appendChild(svgArrow);
@@ -58,5 +79,25 @@ function doYourThing() {
 
     const parent = document.querySelector('article div[data-qa-id="adview_price"]');
     parent.insertBefore(divOldPrice, parent.firstChild);
-    parent.removeChild(svgArrow);
+    potentialRemainingSvg = parent.querySelector("& > svg");
+    potentialRemainingSvg && parent.removeChild(potentialRemainingSvg);
+}
+
+function getPostId() {
+    let url = window.location.href;
+    const postId = url.split("/").pop().split('.')[0];
+    
+    return postId;
+}
+
+function getApiData(postId) {
+    return new Promise(function (resolve, reject) {
+        const apiUrl = 'https://api.leboncoin.fr/finder/classified/' + postId;
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function() {
+            resolve(this.responseText)
+        }
+        xhttp.open("GET", apiUrl, true);
+        xhttp.send();
+    });
 }

@@ -23,7 +23,9 @@
 ## Addon
 
 - Firefox : https://addons.mozilla.org/fr/firefox/addon/price-history-4-lbc/
+- Chrome : https://chrome.google.com/webstore/detail/item-price-history-lebonc/fcidkhdnnclgekjnmgpohmejgpfanpdj
 
 ## Example
 
 ![Example](https://i.ibb.co/V3CB456/Capture-d-cran-2023-09-05-185356.png)
+

@@ -1,8 +1,7 @@
-
-browser.tabs.onUpdated.addListener(
+chrome.tabs.onUpdated.addListener(
     function(tabId, changeInfo, tab) {
         if (changeInfo.url) {
-            browser.tabs.sendMessage( tabId, {
+            chrome.tabs.sendMessage( tabId, {
                 message: 'lbc_old_price',
                 url: changeInfo.url
             })

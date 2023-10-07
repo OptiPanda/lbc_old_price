@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.0.1-chrome
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -10,15 +10,14 @@
 // @grant        none
 // ==/UserScript==
 
-if (typeof browser !== "undefined") {
-    browser.runtime.onMessage.addListener(
-        function(request, sender, sendResponse) {
-            if (request.message === 'lbc_old_price') {
-                setTimeout(() => applyOldPrice(getPostId()), 1000);
-            }
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.message === 'lbc_old_price') {
+            console.log("LBC Price : message")
+            setTimeout(() => applyOldPrice(getPostId()), 1000);
         }
-    );
-}
+    }
+);
 
 (function() {
     'use strict';
@@ -28,7 +27,7 @@ if (typeof browser !== "undefined") {
 async function applyOldPrice(postId) {
 
     if (!document.querySelector("article")) {
-        console.log("Not an article");
+        console.log("LBC Price : Not an article");
         return;
     }
 
@@ -37,7 +36,7 @@ async function applyOldPrice(postId) {
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 
     if (!oldPrice) {
-        console.log("no old price");
+        console.log("LBC Price : no old price");
         return;
     }
 
@@ -45,7 +44,7 @@ async function applyOldPrice(postId) {
 
     displayOldPrice(oldPrice, currentPrice);
 
-    console.log("old price ajouté");
+    console.log("LBC Price : old price ajouté");
 }
 
 function displayOldPrice(oldPrice, currentPrice) {

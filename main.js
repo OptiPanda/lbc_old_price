@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      2.0.1-chrome
+// @version      2.0.2
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -61,18 +61,27 @@ function displayOldPrice(oldPrice, currentPrice) {
 
     divOldPrice.appendChild(pOldPrice);
     const divDiff = document.createElement("div");
-    divDiff.setAttribute("class", "flex flex-col items-center");
+    divDiff.setAttribute("class", "flex flex-col items-center mr-md");
 
-    const pDiff = document.createElement("p");
-    pDiff.innerHTML = "(" + (""+(+currentPrice - +oldPrice)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €)";
-    pDiff.setAttribute("class", "text-subhead mr-md");
+    const reduction = (+currentPrice - +oldPrice);
+    const percentReduce = reduction / oldPrice
+
+    const pDiffPercent = document.createElement("p");
+    pDiffPercent.innerHTML = ""+(Math.round(percentReduce*1000)/1000)*100+"%";
+    pDiffPercent.setAttribute("class", "text-body-2 font-bold");
 
     const svgArrow = document.querySelector('svg[data-title="baisse de prix"]');
-    svgArrow?.classList?.remove("ml-md");
-    svgArrow?.classList?.remove("text-success");
+    svgArrow.classList.remove("ml-md");
+    svgArrow.classList.remove("text-success");
+    svgArrow.children[0].innerHTML = "Baisse de prix de " + (-reduction) + "€";
 
-    divDiff.appendChild(pDiff);
+    const pDiff = document.createElement("p");
+    pDiff.innerHTML = (""+reduction).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
+    pDiff.setAttribute("class", "text-body-2 font-bold");
+
+    divDiff.appendChild(pDiffPercent);
     divDiff.appendChild(svgArrow);
+    divDiff.appendChild(pDiff);
 
     divOldPrice.appendChild(divDiff);
 

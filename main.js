@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      2.0.2
+// @version      2.0.3
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -68,7 +68,7 @@ function displayOldPrice(oldPrice, currentPrice) {
     const percentReduce = reduction / oldPrice
 
     const pDiffPercent = document.createElement("p");
-    pDiffPercent.innerHTML = ""+(Math.round(percentReduce*1000)/1000)*100+"%";
+    pDiffPercent.innerHTML = ""+(Math.round(percentReduce*1000)/10)+"%";
     pDiffPercent.setAttribute("class", "text-body-2 font-bold");
 
     const svgArrow = document.querySelector('svg[data-title="baisse de prix"]');

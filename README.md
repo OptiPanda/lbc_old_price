@@ -27,5 +27,5 @@
 
 ## Example
 
-![Example](https://i.ibb.co/V3CB456/Capture-d-cran-2023-09-05-185356.png)
+![Example](https://addons.mozilla.org/user-media/previews/full/288/288375.png)
 

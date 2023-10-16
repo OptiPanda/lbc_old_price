@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      2.0.3
+// @version      2.1.0
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -26,11 +26,20 @@ chrome.runtime.onMessage.addListener(
 
 async function applyOldPrice(postId) {
 
-    if (!document.querySelector("article")) {
-        console.log("LBC Price : Not an article");
-        return;
+    var article = document.querySelector("article");
+
+    if (article) {
+        applyOldPrice4Article(article, postId);
     }
 
+    var allAdItems = document.querySelectorAll('[data-qa-id="aditem_container"]');
+
+    if (allAdItems) {
+        applyOldPrice4ListAds(allAdItems);
+    }
+}
+
+async function applyOldPrice4Article(article, postId) {
     const rawDatas = await getApiData(postId);
     const datas = JSON.parse(rawDatas);
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
@@ -42,21 +51,46 @@ async function applyOldPrice(postId) {
 
     const currentPrice = datas?.price[0];
 
-    displayOldPrice(oldPrice, currentPrice);
+    displayOldPriceInElement(article, postId, oldPrice, currentPrice);
 
     console.log("LBC Price : old price ajouté");
 }
 
-function displayOldPrice(oldPrice, currentPrice) {
-    const exist = document.getElementById("old_price_to_display");
+async function applyOldPrice4ListAds(allAdItems) {
+    allAdItems.forEach(adItem => adItem.querySelector('[data-test-id="price"] > svg') && applyOldPrice4Ad(adItem));
+}
+
+async function applyOldPrice4Ad(adItem) {
+    const adId = getAdId(adItem.getAttribute('href'));
+    const rawDatas = await getApiData(adId);
+    const datas = JSON.parse(rawDatas);
+    const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
+
+    if (!oldPrice) {
+        console.log("LBC Price : no old price");
+        return;
+    }
+
+    const currentPrice = datas?.price[0];
+
+    displayOldPriceInElement(adItem, adId, oldPrice, currentPrice);
+
+    console.log("LBC Price : old price ajouté");
+}
+
+function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
+    const exist = document.getElementById("old_price_to_display_" + id);
     exist && document.removeChild(exist);
+
+    const priceContainer = element.querySelectorAll('[data-qa-id="adview_price"], [data-test-id="price"]')[0];
+    const currentPriceClass = [...priceContainer.firstChild.classList].filter(c => c.indexOf("success") < 0);
 
     const divOldPrice = document.createElement("div");
     divOldPrice.setAttribute("id", "old_price_to_display");
     divOldPrice.setAttribute("class", "flex flex-wrap items-center");
 
     const pOldPrice = document.createElement("p");
-    pOldPrice.setAttribute("class", "text-headline-2 text-error mr-md");
+    pOldPrice.setAttribute("class", [...currentPriceClass, "text-error", "mr-md"].join(' '));
     pOldPrice.innerHTML = oldPrice.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
 
     divOldPrice.appendChild(pOldPrice);
@@ -64,38 +98,38 @@ function displayOldPrice(oldPrice, currentPrice) {
     divDiff.setAttribute("class", "flex flex-col items-center mr-md");
 
     const reduction = (+currentPrice - +oldPrice);
-    const percentReduce = reduction / oldPrice
+    const percentReduce = reduction / oldPrice;
+    const percentReduceDisplay = Math.round(percentReduce * 1000) / 10;
 
     const pDiffPercent = document.createElement("p");
-    pDiffPercent.innerHTML = ""+(Math.round(percentReduce*1000)/10)+"%";
-    pDiffPercent.setAttribute("class", "text-body-2 font-bold");
+    pDiffPercent.innerHTML = "" + percentReduceDisplay + "%";
+    pDiffPercent.setAttribute("class", [...currentPriceClass, "text-basic"].join(' '));
 
-    const svgArrow = document.querySelector('svg[data-title="baisse de prix"]');
+    const svgArrow = priceContainer.querySelector('svg');
     svgArrow.classList.remove("ml-md");
     svgArrow.classList.remove("text-success");
-    svgArrow.children[0].innerHTML = "Baisse de prix de " + (-reduction) + "€";
+    svgArrow.children[0].innerHTML = "Baisse de prix de " + (-reduction) + "€ (" + percentReduceDisplay + "%)";
 
     const pDiff = document.createElement("p");
     pDiff.innerHTML = (""+reduction).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
-    pDiff.setAttribute("class", "text-body-2 font-bold");
+    pDiff.setAttribute("class", [...currentPriceClass, "text-basic"].join(' '));
 
     divDiff.appendChild(pDiffPercent);
     divDiff.appendChild(svgArrow);
     divDiff.appendChild(pDiff);
 
     divOldPrice.appendChild(divDiff);
-
-    const parent = document.querySelector('article div[data-qa-id="adview_price"]');
-    parent.insertBefore(divOldPrice, parent.firstChild);
-    potentialRemainingSvg = parent.querySelector("& > svg");
-    potentialRemainingSvg && parent.removeChild(potentialRemainingSvg);
+    priceContainer.insertBefore(divOldPrice, priceContainer.firstChild);
+    potentialRemainingSvg = priceContainer.querySelector("& > svg");
+    potentialRemainingSvg && priceContainer.removeChild(potentialRemainingSvg);
 }
 
 function getPostId() {
-    let url = window.location.href;
-    const postId = url.split("/").pop().split('.')[0];
-    
-    return postId;
+    return getAdId(window.location.href);
+}
+
+function getAdId(url) {
+    return url.split("/").pop().split('.')[0];
 }
 
 function getApiData(postId) {

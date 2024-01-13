@@ -43,6 +43,7 @@ async function applyOldPrice4Article(article, postId) {
     const rawDatas = await getApiData(postId);
     const datas = JSON.parse(rawDatas);
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
+    const oldDate = datas?.first_publication_date
 
     if (!oldPrice) {
         console.log("LBC Price : no old price");
@@ -50,8 +51,11 @@ async function applyOldPrice4Article(article, postId) {
     }
 
     const currentPrice = datas?.price[0];
+    const currentDate = datas?.index_date;
 
     displayOldPriceInElement(article, postId, oldPrice, currentPrice);
+
+    displayOldDateInElement(article, postId, oldDate, currentDate)
 
     console.log("LBC Price : old price ajouté");
 }
@@ -83,7 +87,7 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     exist && document.removeChild(exist);
 
     const priceContainer = element.querySelectorAll('[data-qa-id="adview_price"], [data-test-id="price"]')[0];
-    const currentPriceClass = [...priceContainer.firstChild.classList].filter(c => c.indexOf("success") < 0);
+    const currentPriceClass = [...priceContainer.firstChild.firstChild.classList].filter(c => c.indexOf("success") < 0);
 
     const divOldPrice = document.createElement("div");
     divOldPrice.setAttribute("id", "old_price_to_display");
@@ -123,6 +127,63 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     potentialRemainingSvg = priceContainer.querySelector("& > svg");
     potentialRemainingSvg && priceContainer.removeChild(potentialRemainingSvg);
 }
+
+function displayOldDateInElement(element, id, oldDate, currentDate) {
+    if (oldDate === currentDate) {
+        return;
+    }
+    
+    const exist = document.getElementById("old_date_to_display_" + id);
+    exist && document.removeChild(exist);
+
+    const dateContainer = element.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] > div')[1];
+    const currentDateClass = dateContainer.firstChild.classList;
+
+    const divOldDate = document.createElement("div");
+    divOldDate.setAttribute("id", "old_date_to_display");
+    divOldDate.setAttribute("class", "flex flex-wrap items-center");
+
+    const pOldDate = document.createElement("p");
+    pOldDate.setAttribute("class", currentDateClass);
+    pOldDate.innerHTML = "Mise en ligne le " + dateFormatter(oldDate);
+
+    divOldDate.appendChild(pOldDate);
+
+    const pCurrentDate = document.createElement("p");
+    pCurrentDate.setAttribute("class", currentDateClass);
+    pCurrentDate.innerHTML = "Mise à jour le " + dateFormatter(currentDate);
+
+    divOldDate.appendChild(pCurrentDate);
+    divOldDate.setAttribute("class", "flex flex-col");
+
+    dateContainer.removeChild(dateContainer.firstChild);
+    dateContainer.appendChild(divOldDate);
+}
+
+function dateFormatter(dateString) {
+    const dateObj = new Date(dateString);
+  
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const year = dateObj.getFullYear();
+    const hour = dateObj.getHours();
+    const minutes = dateObj.getMinutes();
+
+    const gapInMs = new Date().getTime() - dateObj.getTime();
+    const gapInDays = Math.floor(gapInMs / (1000 * 60 * 60 * 24));
+
+    var formatedDate = `${day}/${month}/${year} à ${hour}h${minutes}`;
+
+    if (gapInDays > 1) {
+        formatedDate += ` ( ${gapInDays} jours )`;
+    } else if (gapInDays == 1) {
+        formatedDate += ` ( Hier )`;
+    } else if (gapInDays == 0) {
+        formatedDate += ` ( Aujourd'hui )`;
+    }
+  
+    return formatedDate;
+  }
 
 function getPostId() {
     return getAdId(window.location.href);

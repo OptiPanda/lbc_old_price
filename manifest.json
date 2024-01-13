@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Item Price History - LeBonCoin",
-    "version": "2.1.0.66",
+    "version": "2.1.1.66",
     "background": {
       "scripts": ["background.js"],
       "persistent": false,
@@ -9,7 +9,7 @@
     },
     "permissions": ["*://*.leboncoin.fr/*"],
   
-    "description": "Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée",
+    "description": "Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signal\u00e9e ainsi que sa date de mise en ligne",
   
     "homepage_url": "https://github.com/OptiPanda/lbc_old_price",
     "icons": {

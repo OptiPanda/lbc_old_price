@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Price History - LeBonCoin
 // @namespace    http://tampermonkey.net/
-// @version      2.1.0
+// @version      2.1.2
 // @description  Extension permettant d'afficher l'ancien prix de vente d'un article sur le site LeBonCoin quand une baisse de prix est signalée
 // @author       OptiPanda
 // @match        https://www.leboncoin.fr/*/*
@@ -13,19 +13,17 @@
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message === 'lbc_old_price') {
-            console.log("LBC Price : message")
-            setTimeout(() => applyOldPrice(getPostId()), 1000);
+            setTimeout(() => applyOldPrice(getPostId()), 700);
         }
     }
 );
 
 (function() {
     'use strict';
-    setTimeout(() => applyOldPrice(getPostId()), 1000);
+    setTimeout(() => applyOldPrice(getPostId()), 700);
 })();
 
 async function applyOldPrice(postId) {
-
     var article = document.querySelector("article");
 
     if (article) {
@@ -42,22 +40,21 @@ async function applyOldPrice(postId) {
 async function applyOldPrice4Article(article, postId) {
     const rawDatas = await getApiData(postId);
     const datas = JSON.parse(rawDatas);
-    const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
     const oldDate = datas?.first_publication_date
+    
+    if (oldDate) {    
+        const currentDate = datas?.index_date;
 
-    if (!oldPrice) {
-        console.log("LBC Price : no old price");
-        return;
+        displayOldDateInElement(article, postId, oldDate, currentDate);
     }
+    
+    const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 
-    const currentPrice = datas?.price[0];
-    const currentDate = datas?.index_date;
+    if (oldPrice) {
+        const currentPrice = datas?.price[0];
 
-    displayOldPriceInElement(article, postId, oldPrice, currentPrice);
-
-    displayOldDateInElement(article, postId, oldDate, currentDate)
-
-    console.log("LBC Price : old price ajouté");
+        displayOldPriceInElement(article, postId, oldPrice, currentPrice);
+    }
 }
 
 async function applyOldPrice4ListAds(allAdItems) {
@@ -70,16 +67,11 @@ async function applyOldPrice4Ad(adItem) {
     const datas = JSON.parse(rawDatas);
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 
-    if (!oldPrice) {
-        console.log("LBC Price : no old price");
-        return;
+    if (oldPrice) {
+        const currentPrice = datas?.price[0];
+    
+        displayOldPriceInElement(adItem, adId, oldPrice, currentPrice);
     }
-
-    const currentPrice = datas?.price[0];
-
-    displayOldPriceInElement(adItem, adId, oldPrice, currentPrice);
-
-    console.log("LBC Price : old price ajouté");
 }
 
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
@@ -128,11 +120,7 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     potentialRemainingSvg && priceContainer.removeChild(potentialRemainingSvg);
 }
 
-function displayOldDateInElement(element, id, oldDate, currentDate) {
-    if (oldDate === currentDate) {
-        return;
-    }
-    
+function displayOldDateInElement(element, id, oldDate, currentDate) {    
     const exist = document.getElementById("old_date_to_display_" + id);
     exist && document.removeChild(exist);
 
@@ -148,13 +136,15 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
     pOldDate.innerHTML = "Mise en ligne le " + dateFormatter(oldDate);
 
     divOldDate.appendChild(pOldDate);
-
-    const pCurrentDate = document.createElement("p");
-    pCurrentDate.setAttribute("class", currentDateClass);
-    pCurrentDate.innerHTML = "Mise à jour le " + dateFormatter(currentDate);
-
-    divOldDate.appendChild(pCurrentDate);
-    divOldDate.setAttribute("class", "flex flex-col");
+    
+    if (oldDate !== currentDate) {
+        const pCurrentDate = document.createElement("p");
+        pCurrentDate.setAttribute("class", currentDateClass);
+        pCurrentDate.innerHTML = "Mise à jour le " + dateFormatter(currentDate);
+    
+        divOldDate.appendChild(pCurrentDate);
+        divOldDate.setAttribute("class", "flex flex-col");
+    }
 
     dateContainer.removeChild(dateContainer.firstChild);
     dateContainer.appendChild(divOldDate);

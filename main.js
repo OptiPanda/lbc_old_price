@@ -84,7 +84,7 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     const currentPriceClass = [...priceContainer.firstChild.firstChild.classList].filter(c => c.indexOf("success") < 0);
 
     const divOldPrice = document.createElement("div");
-    divOldPrice.setAttribute("id", "old_price_to_display");
+    divOldPrice.setAttribute("id", "old_price_to_display_" + id);
     divOldPrice.setAttribute("class", "flex flex-wrap items-center");
 
     const pOldPrice = document.createElement("p");
@@ -130,7 +130,7 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
     const currentDateClass = dateContainer.firstChild.classList;
 
     const divOldDate = document.createElement("div");
-    divOldDate.setAttribute("id", "old_date_to_display");
+    divOldDate.setAttribute("id", "old_date_to_display_" + id);
     divOldDate.setAttribute("class", "flex flex-wrap items-center");
 
     const pOldDate = document.createElement("p");

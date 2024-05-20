@@ -55,6 +55,50 @@ async function applyOldPrice4Article(article, postId) {
 
         displayOldPriceInElement(article, postId, oldPrice, currentPrice);
     }
+
+    enhanceArticleDescriptionDisplay(article);
+    enhanceArticleCritereDisplay(article);
+    moveAutoviza(article);
+}
+
+function enhanceArticleDescriptionDisplay(article) {
+    const description = article.querySelector("[data-qa-id='adview_spotlight_description_container'] p");
+
+    if (description?.innerHTML.indexOf("•") !== -1) {
+        const splitChar = " • ";
+        const oldDesc = description.innerHTML.split(splitChar);
+
+        description.innerHTML = `<a id="goToMap" class="underline" title="Aller à la carte">`
+        + article.querySelector("[data-title='PinOutline']").outerHTML.replace("fill-current text-current w-sz-16 h-sz-16 mr-sm mt-sm", "w-sz-16 h-sz-16 mr-sm inline-block")
+        + oldDesc[0] + '</a>'
+        + splitChar + oldDesc[1]
+        + splitChar + oldDesc[2].replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+        + splitChar + oldDesc[3]
+        + (oldDesc[4] ? splitChar + oldDesc[4] : "")
+        + (oldDesc[5] ? splitChar + oldDesc[5] : "");
+        document.getElementById("goToMap").onclick = () => {document.getElementById("map").scrollIntoView();};
+    }
+}
+
+function enhanceArticleCritereDisplay(article) {
+    const critereKm = article.querySelector("[data-qa-id='criteria_item_mileage']");
+
+    if (critereKm) {
+        critereKm.innerHTML = critereKm.innerHTML.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+}
+
+function moveAutoviza(article) {
+    const divAutoviza = document.evaluate("//h2[contains(., 'Autoviza')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
+
+    if (divAutoviza) {
+        const asideFirstChild = article.querySelector("aside>div")
+        const newDiv = document.createElement("div");
+        newDiv.innerHTML = "<"+asideFirstChild.firstChild.nodeName+" class='"+asideFirstChild.firstChild.classList+"'></"+asideFirstChild.firstChild.nodeName+">";
+        newDiv.firstChild.appendChild(divAutoviza);
+        newDiv.firstChild.firstChild.classList.remove("py-xl")
+        asideFirstChild.after(newDiv);
+    }
 }
 
 async function applyOldPrice4ListAds(allAdItems) {

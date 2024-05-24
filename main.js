@@ -30,6 +30,9 @@ async function applyOldPrice(postId) {
 
     if (article) {
         applyOldPrice4Article(article, postId);
+        enhanceArticleDescriptionDisplay(article);
+        enhanceArticleCritereDisplay(article);
+        moveAutoviza(article);
     }
 
     var allAdItems = document.querySelectorAll('[data-qa-id="aditem_container"]');
@@ -57,10 +60,6 @@ async function applyOldPrice4Article(article, postId) {
 
         displayOldPriceInElement(article, postId, oldPrice, currentPrice);
     }
-
-    enhanceArticleDescriptionDisplay(article);
-    enhanceArticleCritereDisplay(article);
-    moveAutoviza(article);
 }
 
 function enhanceArticleDescriptionDisplay(article) {
@@ -78,7 +77,7 @@ function enhanceArticleDescriptionDisplay(article) {
         + splitChar + oldDesc[3]
         + (oldDesc[4] ? splitChar + oldDesc[4] : "")
         + (oldDesc[5] ? splitChar + oldDesc[5] : "");
-        document.getElementById("goToMap").onclick = () => {document.getElementById("map").scrollIntoView();};
+        document.getElementById("goToMap").onclick = () => {document.getElementById("map").scrollIntoView({ behavior: "smooth"});};
     }
 }
 
@@ -87,6 +86,13 @@ function enhanceArticleCritereDisplay(article) {
 
     if (critereKm) {
         critereKm.innerHTML = critereKm.innerHTML.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+}
+
+function enhanceAdMileage(adItem) {
+    const pMileage = document.evaluate(".//p[text()='Kilométrage']", adItem, null, XPathResult.ANY_TYPE, null).iterateNext()?.nextSibling;
+    if (pMileage) {
+        pMileage.innerHTML = pMileage.innerHTML.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     }
 }
 
@@ -104,7 +110,12 @@ function moveAutoviza(article) {
 }
 
 async function applyOldPrice4ListAds(allAdItems) {
-    allAdItems.forEach(adItem => adItem.querySelector('[data-test-id="price"] > svg') && applyOldPrice4Ad(adItem));
+    allAdItems.forEach(adItem => {
+        if (adItem.querySelector('[data-test-id="price"] > svg')) {
+            applyOldPrice4Ad(adItem)
+        }
+        enhanceAdMileage(adItem);
+    });
 }
 
 async function applyOldPrice4Ad(adItem) {
@@ -117,6 +128,14 @@ async function applyOldPrice4Ad(adItem) {
         const currentPrice = datas?.price[0];
     
         displayOldPriceInElement(adItem, adId, oldPrice, currentPrice);
+    }
+
+    const oldDate = datas?.first_publication_date
+    
+    if (oldDate) {    
+        const currentDate = datas?.index_date;
+
+        displayOldDateInAds(adItem, adId, oldDate, currentDate);
     }
 }
 
@@ -166,13 +185,35 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     potentialRemainingSvg && priceContainer.removeChild(potentialRemainingSvg);
 }
 
-function displayOldDateInElement(element, id, oldDate, currentDate) {    
+function displayOldDateInElement(element, id, oldDate, currentDate) {
     const exist = document.getElementById("old_date_to_display_" + id);
     exist && document.removeChild(exist);
 
-    const dateContainer = element.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] > div')[1];
+    const dateContainer = element.querySelector('[data-qa-id="adview_spotlight_description_container"] p.text-caption').parentElement;
     const currentDateClass = dateContainer.firstChild.classList;
 
+    const divOldDate = createDivOldDate(id, currentDateClass, oldDate, currentDate);
+
+    dateContainer.removeChild(dateContainer.firstChild);
+    dateContainer.insertBefore(divOldDate, dateContainer.firstChild);
+}
+
+function displayOldDateInAds(ad, adId, oldDate, currentDate) {
+    const exist = document.getElementById("old_date_to_display_" + adId);
+    exist && document.removeChild(exist);
+
+    const dateContainer = ad.querySelector('[data-test-id="bigpicture-vehicles-content"]')?.nextSibling;
+    if (dateContainer) {
+        dateContainer.classList.add("flex-col")
+        const currentDateClass = dateContainer.firstChild.classList;
+    
+        const divOldDate = createDivOldDate(adId, currentDateClass, oldDate, currentDate);
+    
+        dateContainer.insertBefore(divOldDate, dateContainer.firstChild);
+    }
+}
+
+function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
     const divOldDate = document.createElement("div");
     divOldDate.setAttribute("id", "old_date_to_display_" + id);
     divOldDate.setAttribute("class", "flex flex-wrap items-center");
@@ -182,7 +223,7 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
     pOldDate.innerHTML = "Mise en ligne le " + dateFormatter(oldDate);
 
     divOldDate.appendChild(pOldDate);
-    
+
     if (oldDate !== currentDate) {
         const pCurrentDate = document.createElement("p");
         pCurrentDate.setAttribute("class", currentDateClass);
@@ -192,8 +233,7 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         divOldDate.setAttribute("class", "flex flex-col");
     }
 
-    dateContainer.removeChild(dateContainer.firstChild);
-    dateContainer.appendChild(divOldDate);
+    return divOldDate;
 }
 
 function dateFormatter(dateString) {
@@ -202,8 +242,8 @@ function dateFormatter(dateString) {
     const day = dateObj.getDate().toString().padStart(2, '0');
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const year = dateObj.getFullYear();
-    const hour = dateObj.getHours();
-    const minutes = dateObj.getMinutes();
+    const hour = dateObj.getHours().toString().padStart(2, '0');
+    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
 
     const gapInMs = new Date().getTime() - dateObj.getTime();
     const gapInDays = Math.floor(gapInMs / (1000 * 60 * 60 * 24));

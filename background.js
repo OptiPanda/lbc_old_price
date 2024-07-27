@@ -1,3 +1,6 @@
+if (chrome) {
+    browser = chrome;
+}
 
 browser.tabs.onUpdated.addListener(
     function(tabId, changeInfo, tab) {

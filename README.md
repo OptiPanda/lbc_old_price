@@ -8,16 +8,6 @@
 
 🇺🇸 This code allows you to see the selling price of any item before its change (↘), as well as the date the advertisement was posted.
 
-## JS injection
-
-🇫🇷 Utilisable avec TamperMonkey, ViolentMonkey, FireMonkey, GreaseMonkey etc...<br/>
-🇫🇷 Copier le contenu du fichier main.js dans un nouveau script de votre injecteur JS préféré. C'est tout !
-
------
-
-🇺🇸 Usable with TamperMonkey, ViolentMonkey, FireMonkey, GreaseMonkey etc...<br/>
-🇺🇸 Copy main.js content into a new sheet on your favourite JS-Injector. That's it !
-
 ## Addon Page
 
 [<img src='https://i.ibb.co/CVrJ9Jy/button-get-it-on-firefox.png' alt ='Get it on Firefox'>](https://addons.mozilla.org/fr/firefox/addon/price-history-4-lbc/) 

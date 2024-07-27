@@ -1,13 +1,15 @@
 {
     "manifest_version": 2,
     "name": "Item Price History - LeBonCoin",
-    "version": "2.1.5.66",
+    "version": "2.1.6.66",
     "background": {
       "scripts": ["background.js"],
       "persistent": false,
       "type": "module"
     },
-    "permissions": ["*://*.leboncoin.fr/*"],
+    "permissions": [
+        "*://*.leboncoin.fr/*"
+    ],
   
     "description": "Afficher de l'ancien prix de vente d'un article sur le site LeBonCoin ainsi que sa date de mise en ligne",
   
@@ -20,7 +22,7 @@
             "matches": [
                 "*://*.leboncoin.fr/*"
             ],
-            "js" : ["main.js"]
+            "js" : ["main.js", "ads.js", "article.js", "common.js"]
         }
     ]
 }

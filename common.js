@@ -1,5 +1,5 @@
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
-    const exist = element.querySelector("old_price_to_display_" + id);
+    const exist = element.querySelector("#old_price_to_display_" + id);
     if (exist) {
         exist.parentElement.removeChild(exist);
     }

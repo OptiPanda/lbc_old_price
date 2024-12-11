@@ -17,10 +17,21 @@ async function applyOldPrice4Article(article, postId) {
         displayOldPriceInElement(article, postId, oldPrice, currentPrice);
     }
     
-    enhanceArticleDescriptionDisplay(article);
-    enhanceArticleCritereDisplay(article);
-    enhanceAdviewSticky();
-    moveAutoviza(article);
+    try {
+        enhanceArticleDescriptionDisplay(article);
+    } catch (e) {console.error(e)}
+    try {
+        enhanceArticleCritereDisplay(article);
+    } catch (e) {console.error(e)}
+    try {
+        enhanceAdviewSticky();
+    } catch (e) {console.error(e)}
+    try {
+        movePackSerenite(article);
+    } catch (e) {console.error(e)}
+    try {
+        moveAutoviza(article);
+    } catch (e) {console.error(e)}
 }
 
 function displayOldDateInElement(element, id, oldDate, currentDate) {
@@ -45,15 +56,28 @@ function enhanceArticleDescriptionDisplay(article) {
         const splitChar = " • ";
         const oldDesc = description.innerHTML.split(splitChar);
 
-        description.innerHTML = `<a id="goToMap" class="underline inline-flex" title="Aller à la carte">`
-        + article.querySelector("[data-title='PinOutline']").outerHTML.replace("fill-current text-current w-sz-16 h-sz-16 mr-sm mt-sm", "w-sz-16 h-sz-16 mr-sm inline-block")
-        + oldDesc[0] + '</a>'
+        const pin = article.querySelector("[data-title='PinOutline']");
+        var place;
+
+        if (pin) {
+            place = `<a id="goToMap" class="underline inline-flex" title="Aller à la carte">`
+            + pin.outerHTML.replace("fill-current text-current w-sz-16 h-sz-16 mr-sm mt-sm", "w-sz-16 h-sz-16 mr-sm inline-block")
+            + oldDesc[0] + '</a>';
+        } else {
+            place = oldDesc[0];
+        }
+
+        description.innerHTML = 
+        place
         + splitChar + oldDesc[1]
         + splitChar + oldDesc[2].replace(/\B(?=(\d{3})+(?!\d))/g, " ")
         + (oldDesc[3] ? splitChar + oldDesc[3] : "")
         + (oldDesc[4] ? splitChar + oldDesc[4] : "")
         + (oldDesc[5] ? splitChar + oldDesc[5] : "");
-        document.getElementById("goToMap").onclick = () => {document.getElementById("map").scrollIntoView({ behavior: "smooth"});};
+
+        if (pin) {
+            document.getElementById("goToMap").onclick = () => {document.getElementById("map").scrollIntoView({ behavior: "smooth"});};
+        }
     }
 }
 
@@ -68,11 +92,21 @@ function enhanceArticleCritereDisplay(article) {
 function moveAutoviza(article) {
     const divAutoviza = document.evaluate("//h2[contains(., 'Autoviza')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
 
-    if (divAutoviza) {
-        const asideFirstChild = article.querySelector("aside>div")
+    moveDivAside(article, divAutoviza);
+}
+
+function movePackSerenite(article) {
+    const divPackSerenite = document.evaluate("//p[contains(., 'Pack Sérénité*')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
+
+    moveDivAside(article, divPackSerenite);
+}
+
+function moveDivAside(container, div) {
+    if (div) {
+        const asideFirstChild = container.querySelector("aside>div")
         const newDiv = document.createElement("div");
-        newDiv.innerHTML = "<"+asideFirstChild.firstChild.nodeName+" class='"+asideFirstChild.firstChild.classList+"'></"+asideFirstChild.firstChild.nodeName+">";
-        newDiv.firstChild.appendChild(divAutoviza);
+        newDiv.innerHTML = `<${asideFirstChild.firstChild.nodeName} class='${asideFirstChild.firstChild.classList}'></${asideFirstChild.firstChild.nodeName}>`;
+        newDiv.firstChild.appendChild(div);
         newDiv.firstChild.firstChild.classList.remove("py-xl")
         asideFirstChild.after(newDiv);
     }

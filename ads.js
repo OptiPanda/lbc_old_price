@@ -6,11 +6,7 @@ async function applyOldPrice4ListAds(allAdItems) {
 
 async function applyOldPrice4Ad(adItem) {
     const adId = getAdId(adItem.getAttribute('href'));
-    var datas = undefined;
-    if (adItem.querySelector('[data-test-id="price"] > svg')) {
-        const rawDatas = await getApiData(adId);
-        datas = JSON.parse(rawDatas);
-    }
+    const datas = await getApiData(adId);
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 
     if (oldPrice) {
@@ -36,13 +32,13 @@ function displayOldDateInAds(ad, adId, oldDate, currentDate) {
         exist.parentElement.removeChild(exist);
     }
 
-    const dateContainer = ad.querySelector('[data-test-id="bigpicture-vehicles-content"]')?.nextSibling;
+    const dateContainer = ad.querySelector('[data-test-id="ad-params-labels"]')?.parentElement;
     if (dateContainer) {
         dateContainer.classList.add("flex-col")
-        const currentDateClass = dateContainer.firstChild.classList;
+        const targetClass = "flex flex-wrap overflow-hidden mt-sm text-caption text-neutral";
     
-        const divOldDate = createDivOldDate(adId, currentDateClass, oldDate, currentDate);
+        const divOldDate = createDivOldDate(adId, targetClass, oldDate, currentDate);
     
-        dateContainer.insertBefore(divOldDate, dateContainer.firstChild);
+        dateContainer.appendChild(divOldDate);
     }
 }

@@ -5,51 +5,37 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     }
 
     const priceContainer = element.querySelectorAll('[data-qa-id="adview_price"], [data-test-id="price"]')[0];
-    const currentPriceClass = [...priceContainer.querySelector('.text-success')?.classList].filter(c => c.indexOf("success") < 0);
-
-    const divOldPrice = document.createElement("div");
-    divOldPrice.setAttribute("id", "old_price_to_display_" + id);
-    divOldPrice.setAttribute("class", "flex flex-wrap items-center");
-
-    const pOldPrice = document.createElement("p");
-    pOldPrice.setAttribute("class", [...currentPriceClass, "text-error", "mr-md"].join(' '));
-    pOldPrice.innerHTML = oldPrice.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
-
-    divOldPrice.appendChild(pOldPrice);
-    const divDiff = document.createElement("div");
-    divDiff.setAttribute("class", "flex flex-col items-center mr-md");
 
     const reduction = (+currentPrice - +oldPrice);
     const percentReduce = reduction / oldPrice;
     const percentReduceDisplay = Math.round(percentReduce * 1000) / 10;
+    
+    priceContainer.setAttribute('style', 'display:none');
 
-    const pDiffPercent = document.createElement("p");
-    pDiffPercent.innerHTML = "" + percentReduceDisplay + "%";
-    pDiffPercent.setAttribute("class", [...currentPriceClass, "text-basic"].join(' '));
-
-    const svgArrow = priceContainer.querySelector('svg');
-    svgArrow.classList.remove("ml-md");
-    svgArrow.classList.remove("text-success");
-    svgArrow.children[0].innerHTML = "Baisse de prix de " + (-reduction) + "€ (" + percentReduceDisplay + "%)";
-
-    const pDiff = document.createElement("p");
-    pDiff.innerHTML = (""+reduction).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
-    pDiff.setAttribute("class", [...currentPriceClass, "text-basic"].join(' '));
-
-    divDiff.appendChild(pDiffPercent);
-    divDiff.appendChild(svgArrow);
-    divDiff.appendChild(pDiff);
-
-    divOldPrice.appendChild(divDiff);
-    priceContainer.insertBefore(divOldPrice, priceContainer.firstChild);
-    potentialRemainingSvg = priceContainer.querySelector("& > svg");
-    potentialRemainingSvg && priceContainer.removeChild(potentialRemainingSvg);
+    priceContainer.insertAdjacentHTML('beforebegin', `
+    <div id="old_price_to_display_${id}" class="flex flex-wrap items-center mr-md">
+        <div class="mr-md flex flex-wrap items-center justify-between">
+            <div class="flex">
+                <p class="text-headline-2 text-success">${spaceDigits(currentPrice)}&nbsp;€</p>&nbsp;
+                <svg viewBox="0 0 24 24" data-title="Baisse de prix" fill="currentColor" stroke="none" class="text-success fill-current shrink-0 w-sz-24 h-sz-24" data-spark-component="icon" aria-hidden="true" focusable="false">
+                    <title>Baisse de prix de ${spaceDigits(reduction)}&nbsp;€ (${percentReduceDisplay}%)</title>
+                    <path fill-rule="evenodd" d="m2.29,6.3c.39-.4,1.02-.4,1.41,0l4.83,4.96,2.97-3.05c.32-.32.74-.5,1.18-.5s.87.18,1.18.5h0s6.12,6.28,6.12,6.28v-3.21c0-.57.45-1.03,1-1.03s1,.46,1,1.03v5.68c0,.57-.45,1.03-1,1.03h-5.54c-.55,0-1-.46-1-1.03s.45-1.03,1-1.03h3.12l-5.89-6.05-2.97,3.05c-.32.32-.74.5-1.18.5s-.87-.18-1.18-.5h0S2.29,7.75,2.29,7.75c-.39-.4-.39-1.05,0-1.45Z"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="text-error line-through" role="deletion">${spaceDigits(oldPrice)}&nbsp;€</div>
+        <span data-spark-component="tag"
+            class="box-border inline-flex items-center justify-center gap-sm whitespace-nowrap text-caption font-bold h-sz-20 px-md rounded-full border-sm border-current text-support ml-sm">
+            ${spaceDigits(reduction)} € (${percentReduceDisplay}%)
+        </span>
+    </div>
+    `.trim());
 }
 
 function enhanceAdMileage(adItem) {
     const pMileage = document.evaluate(".//p[text()='Kilométrage']", adItem, null, XPathResult.ANY_TYPE, null).iterateNext()?.nextSibling;
     if (pMileage) {
-        pMileage.innerHTML = pMileage.innerHTML.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        pMileage.innerHTML = spaceDigits(pMileage.innerHTML);
     }
 }
 
@@ -99,4 +85,16 @@ function dateFormatter(dateString) {
     }
   
     return formatedDate;
+}
+
+function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+}
+
+function spaceDigits(digits) {
+    return (digits+"").replaceAll(/\B(?=(\d{3})+(?!\d))/g, " ")
 }

@@ -40,13 +40,6 @@ function getAdId(url) {
 }
 
 function getApiData(postId) {
-    return new Promise(function (resolve, reject) {
-        const apiUrl = 'https://api.leboncoin.fr/finder/classified/' + postId;
-        const xhttp = new XMLHttpRequest();
-        xhttp.onload = function () {
-            resolve(this.responseText)
-        }
-        xhttp.open("GET", apiUrl, true);
-        xhttp.send();
-    });
+    return fetch(new Request(`https://api.leboncoin.fr/finder/classified/${postId}`))
+        .then((response) => response.json());
 }

@@ -1,6 +1,5 @@
 async function applyOldPrice4Article(article, postId) {
-    const rawDatas = await getApiData(postId);
-    const datas = JSON.parse(rawDatas);
+    const datas = await getApiData(postId);
     const oldDate = datas?.first_publication_date
     
     if (oldDate) {    
@@ -21,7 +20,7 @@ async function applyOldPrice4Article(article, postId) {
         enhanceArticleDescriptionDisplay(article);
     } catch (e) {console.error(e)}
     try {
-        enhanceArticleCritereDisplay(article);
+        enhanceArticleCritereDisplay(article, datas);
     } catch (e) {console.error(e)}
     try {
         enhanceAdviewSticky();
@@ -70,7 +69,7 @@ function enhanceArticleDescriptionDisplay(article) {
         description.innerHTML = 
         place
         + splitChar + oldDesc[1]
-        + splitChar + oldDesc[2].replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+        + splitChar + spaceDigits(oldDesc[2])
         + (oldDesc[3] ? splitChar + oldDesc[3] : "")
         + (oldDesc[4] ? splitChar + oldDesc[4] : "")
         + (oldDesc[5] ? splitChar + oldDesc[5] : "");
@@ -81,11 +80,36 @@ function enhanceArticleDescriptionDisplay(article) {
     }
 }
 
-function enhanceArticleCritereDisplay(article) {
+function enhanceArticleCritereDisplay(article, datas) {
     const critereKm = article.querySelector("[data-qa-id='criteria_item_mileage']");
+    const kmAge = datas?.attributes?.filter(o => o.key === 'mileage')[0]?.value;
+    const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
+    var mDiff = 0;
+    if (dateMes) {
+        mDiff = monthDiff(new Date('01/'+dateMes), new Date());
+    }
 
     if (critereKm) {
-        critereKm.innerHTML = critereKm.innerHTML.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        const kmPan = critereKm.cloneNode(true);
+        critereKm.innerHTML = spaceDigits(critereKm.innerHTML);
+        
+        const exist = article.querySelector("[data-qa-id='criteria_monthly_mileage']")
+        if (exist) {
+            exist.parentElement.removeChild(exist);
+        }
+
+        if (kmAge && dateMes && mDiff) {
+            kmPan.setAttribute("data-qa-id", "criteria_monthly_mileage")
+            kmPan.innerHTML = spaceDigits(kmPan.innerHTML.replaceAll(`${kmAge} km`, `${Math.round(kmAge/mDiff)} km/mois`).replaceAll("Kilométrage", "Kilomètres/mois estimés"));
+            critereKm.parentElement.insertBefore(kmPan, critereKm.nextSibling);
+        }
+    }
+
+    const critereDatePmes = article.querySelector("[data-qa-id='criteria_item_issuance_date']");
+
+    if (critereDatePmes && dateMes) {
+        const age = mDiff/12;
+        critereDatePmes.innerHTML = critereDatePmes.innerHTML.replaceAll(dateMes, `${dateMes} (${Math.round(age * 10) / 10} an${age > 1 ? 's' : ''})`);
     }
 }
 

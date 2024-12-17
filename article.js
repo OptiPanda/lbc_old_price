@@ -39,12 +39,12 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         exist.parentElement.removeChild(exist);
     }
 
-    const dateContainer = element.querySelector('[data-qa-id="adview_spotlight_description_container"] p.text-caption').parentElement;
+    const dateContainer = element.querySelector('[data-qa-id="adview_spotlight_description_container"] p.text-caption.opacity-dim-1').parentElement;
     const currentDateClass = dateContainer.firstChild.classList;
 
     const divOldDate = createDivOldDate(id, currentDateClass, oldDate, currentDate);
 
-    dateContainer.removeChild(dateContainer.firstChild);
+    dateContainer.firstChild.setAttribute("style", "display:none");
     dateContainer.insertBefore(divOldDate, dateContainer.firstChild);
 }
 
@@ -141,5 +141,6 @@ function enhanceAdviewSticky() {
 
     if (adviewSticky && !adviewSticky.classList?.contains("cursor-pointer")) {
         adviewSticky.classList.add("cursor-pointer")
+        adviewSticky.setAttribute("style", "width: -webkit-fill-available")
     }
 }

@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Item Price History - LeBonCoin",
-    "version": "2.2.0.66",
+    "version": "2.2.1.66",
     "background": {
       "scripts": ["background.js"],
       "persistent": false,
@@ -11,7 +11,7 @@
         "*://*.leboncoin.fr/*"
     ],
   
-    "description": "Afficher de l'ancien prix de vente ainsi que laa date de mise en ligne d'un article sur le site LeBonCoin",
+    "description": "Afficher de l'ancien prix de vente ainsi que la date de mise en ligne d'un article sur le site LeBonCoin",
   
     "homepage_url": "https://github.com/OptiPanda/lbc_old_price",
     "icons": {

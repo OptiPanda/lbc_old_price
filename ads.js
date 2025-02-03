@@ -5,7 +5,7 @@ async function applyOldPrice4ListAds(allAdItems) {
 }
 
 async function applyOldPrice4Ad(adItem) {
-    const adId = getAdId(adItem.getAttribute('href'));
+    const adId = getAdId(adItem.querySelector('[href]').getAttribute('href'));
     const datas = await getApiData(adId);
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 

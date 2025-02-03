@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Item Price History - LeBonCoin",
-  "version": "2.2.1.38",
+  "version": "2.2.2.38",
   "background": {
     "service_worker": "background.js"
   },

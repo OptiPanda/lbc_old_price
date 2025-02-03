@@ -18,7 +18,7 @@ if (typeof browser !== "undefined") {
 })();
 
 async function applyOldPrice(postId) {
-    var article = document.querySelector("article");
+    var article = document.querySelector("article#grid");
 
     if (article) {
         applyOldPrice4Article(article, postId);

@@ -2,18 +2,20 @@ async function applyOldPrice4Article(article, postId) {
     const datas = await getApiData(postId);
     const oldDate = datas?.first_publication_date
     
+    const currentDate = datas?.index_date;
     if (oldDate) {    
-        const currentDate = datas?.index_date;
-
         displayOldDateInElement(article, postId, oldDate, currentDate);
+    } else {
+        displayOldDateInElement(article, postId, currentDate, currentDate)
     }
     
+    const currentPrice = datas?.price[0];
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
 
     if (oldPrice) {
-        const currentPrice = datas?.price[0];
-
         displayOldPriceInElement(article, postId, oldPrice, currentPrice);
+    } else {
+        displayCurrentPriceInElement(article, postId, currentPrice);
     }
     
     try {
@@ -34,7 +36,7 @@ async function applyOldPrice4Article(article, postId) {
 }
 
 function displayOldDateInElement(element, id, oldDate, currentDate) {
-    const exist = element.querySelector("#old_date_to_display_" + id);
+    const exist = element.querySelector('[id^="old_date_to_display_"]');
     if (exist) {
         exist.parentElement.removeChild(exist);
     }
@@ -86,12 +88,11 @@ function enhanceArticleCritereDisplay(article, datas) {
     const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
     var mDiff = 0;
     if (dateMes) {
-        mDiff = monthDiff(new Date('01/'+dateMes), new Date());
+        mDiff = monthDiff(new Date(dateMes.split('/')[0]+"/01/"+dateMes.split('/')[1]), new Date());
     }
 
     if (critereKm) {
         const kmPan = critereKm.cloneNode(true);
-        critereKm.innerHTML = spaceDigits(critereKm.innerHTML);
         
         const exist = article.querySelector("[data-qa-id='criteria_monthly_mileage']")
         if (exist) {
@@ -103,6 +104,7 @@ function enhanceArticleCritereDisplay(article, datas) {
             kmPan.innerHTML = spaceDigits(kmPan.innerHTML.replaceAll(`${kmAge} km`, `${Math.round(kmAge/mDiff)} km/mois`).replaceAll("Kilométrage", "Kilomètres/mois estimés"));
             critereKm.parentElement.insertBefore(kmPan, critereKm.nextSibling);
         }
+        critereKm.innerHTML = spaceDigits(critereKm.innerHTML);
     }
 
     const critereDatePmes = article.querySelector("[data-qa-id='criteria_item_issuance_date']");

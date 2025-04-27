@@ -1,5 +1,5 @@
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
-    const exist = element.querySelector("#old_price_to_display_" + id);
+    const exist = element.querySelector('[id^="old_price_to_display_"]');
     if (exist) {
         exist.parentElement.removeChild(exist);
     }
@@ -9,7 +9,7 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     const reduction = (+currentPrice - +oldPrice);
     const percentReduce = reduction / oldPrice;
     const percentReduceDisplay = Math.round(percentReduce * 1000) / 10;
-    
+
     priceContainer.setAttribute('style', 'display:none');
 
     priceContainer.insertAdjacentHTML('beforebegin', `
@@ -31,6 +31,28 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     </div>
     `.trim());
 }
+
+function displayCurrentPriceInElement(element, id, currentPrice) {
+    const exist = element.querySelector('[id^="old_price_to_display_"]');
+    if (exist) {
+        exist.parentElement.removeChild(exist);
+    }
+
+    const priceContainer = element.querySelectorAll('[data-qa-id="adview_price"], [data-test-id="price"]')[0];
+
+    priceContainer.setAttribute('style', 'display:none');
+
+    priceContainer.insertAdjacentHTML('beforebegin', `
+    <div id="old_price_to_display_${id}" class="flex flex-wrap items-center mr-md">
+        <div class="mr-md flex flex-wrap items-center justify-between">
+            <div class="flex">
+                <p class="text-headline-2">${spaceDigits(currentPrice)}&nbsp;€</p>&nbsp;
+            </div>
+        </div>
+    </div>
+    `.trim());
+}
+
 
 function enhanceAdMileage(adItem) {
     const pMileage = document.evaluate(".//p[text()='Kilométrage']", adItem, null, XPathResult.ANY_TYPE, null).iterateNext()?.nextSibling;
@@ -54,7 +76,7 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
         const pCurrentDate = document.createElement("p");
         pCurrentDate.setAttribute("class", currentDateClass);
         pCurrentDate.innerHTML = "Mise à jour le " + dateFormatter(currentDate);
-    
+
         divOldDate.appendChild(pCurrentDate);
         divOldDate.setAttribute("class", "flex flex-col");
     }
@@ -64,7 +86,7 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
 
 function dateFormatter(dateString) {
     const dateObj = new Date(dateString);
-  
+
     const day = dateObj.getDate().toString().padStart(2, '0');
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const year = dateObj.getFullYear();
@@ -81,9 +103,13 @@ function dateFormatter(dateString) {
     } else if (gapInDays == 1) {
         formatedDate += ` ( Hier )`;
     } else if (gapInDays == 0) {
-        formatedDate += ` ( Aujourd'hui )`;
+        if (day === new Date().getDate().toString().padStart(2, '0')) {
+            formatedDate += ` ( Aujourd'hui )`;
+        } else {
+            formatedDate += ` ( Hier )`;
+        }
     }
-  
+
     return formatedDate;
 }
 
@@ -96,5 +122,5 @@ function monthDiff(d1, d2) {
 }
 
 function spaceDigits(digits) {
-    return (digits+"").replaceAll(/\B(?=(\d{3})+(?!\d))/g, " ")
+    return (digits + "").replaceAll(/\B(?=(\d{3})+(?!\d))/g, " ")
 }

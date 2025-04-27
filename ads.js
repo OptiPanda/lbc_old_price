@@ -27,7 +27,7 @@ async function applyOldPrice4Ad(adItem) {
 }
 
 function displayOldDateInAds(ad, adId, oldDate, currentDate) {
-    const exist = ad.querySelector("old_date_to_display_" + adId);
+    const exist = ad.querySelector("[id^='old_date_to_display_']");
     if (exist) {
         exist.parentElement.removeChild(exist);
     }

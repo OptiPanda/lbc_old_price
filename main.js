@@ -17,7 +17,7 @@ if (typeof browser !== "undefined") {
     setTimeout(() => applyOldPrice(getPostId()), 700);
 })();
 
-async function applyOldPrice(postId) {
+function applyOldPrice(postId) {
     var article = document.querySelector("article#grid");
 
     if (article) {

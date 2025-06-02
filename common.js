@@ -1,3 +1,11 @@
+function err(a) {
+    console.error("[LBC_Old_Price | ERROR] - ", a);
+}
+
+function log(a) {
+    console.log("[LBC_Old_Price | INFO] - ", a)
+}
+
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     const exist = element.querySelector('[id^="old_price_to_display_"]');
     if (exist) {
@@ -123,4 +131,17 @@ function monthDiff(d1, d2) {
 
 function spaceDigits(digits) {
     return (digits + "").replaceAll(/\B(?=(\d{3})+(?!\d))/g, " ")
+}
+
+function getPostId() {
+    return getAdId(window.location.href);
+}
+
+function getAdId(url) {
+    return url.split("/").pop().split('.')[0];
+}
+
+function getApiData(postId) {
+    return fetch(new Request(`https://api.leboncoin.fr/finder/classified/${postId}`))
+        .then((response) => response.json());
 }

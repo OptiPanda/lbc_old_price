@@ -152,8 +152,7 @@ function movePackSerenite(article) {
 }
 
 function moveDivAside(container, div, type) {
-    if (div) {
-        document.querySelector(`[lbc_old_price_move='${type}']`)?.remove();
+    if (div && !document.querySelector(`[lbc_old_price_move='${type}']`)) {
 
         div.classList.remove("py-xl","border-b-sm","border-outline")
         const asideRefSection = container.querySelector("aside section");

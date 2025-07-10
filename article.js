@@ -56,7 +56,7 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         element.querySelector('[old_date_to_redisplay="true"]')?.removeAttribute("style");
     }
 
-    const dateContainer = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] p.text-caption'))?.find(el => / à \d{2}:\d{2}/.test(el.textContent))?.parentElement;
+    const dateContainer = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] p.text-caption'))?.find(el => /^(\d{1,2}\s+\w+\s+\d{4}).*(\d{2}:\d{2})$/.test(el.textContent))?.parentElement;
 
     if (!dateContainer) {
         err('Cannot find date Container');

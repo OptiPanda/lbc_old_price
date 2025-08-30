@@ -1,3 +1,4 @@
-
-lbc_old_price*.zip
+*.zip
 .idea
+.vscode
+release.exe

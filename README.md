@@ -20,3 +20,10 @@
 ![beforeAfter](img/B4-Aftr.png)
 ![criterias](img/criteres.png)
 ![infos](img/infos.png)
+
+## Release PY
+
+```
+python -m pip install pyinstaller
+./startRelease.bat
+```

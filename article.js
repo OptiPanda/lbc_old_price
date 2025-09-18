@@ -50,35 +50,50 @@ async function applyOldPrice4Article(article) {
     try {
         moveProtection(article);
     } catch (e) {err(e)}
+    try {
+        moveProtectionVoyageur(article);
+    } catch (e) {err(e)}
 }
 
 function displayOldDateInElement(element, id, oldDate, currentDate) {
-    const exist = element.querySelector('[id^="old_date_to_display_"]');
+    const exist = element.querySelectorAll('[id^="old_date_to_display_"]');
     if (exist) {
-        exist.parentElement.removeChild(exist);
-        element.querySelector('[old_date_to_redisplay="true"]')?.removeAttribute("style");
-    }
-
-    const referenceTags = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] [data-spark-component="tag"]'));
-    for (element of referenceTags) {
-        if (element.id === "date-tag") {
-            err("Date tag already exists");
-            return;
+         for (element of exist) {
+            element.parentElement.removeChild(element);
         }
     }
-    const referenceTag = referenceTags[0];
-    const dateContainer = referenceTag?.parentElement;
+    const descContainer = document.querySelector('[data-qa-id="adview_spotlight_description_container"]');
 
-    if (!dateContainer) {
+    var tagsContainer;
+    const descriptionTags = Array.from(descContainer.querySelectorAll('[data-spark-component="tag"]'));
+    if (descriptionTags && descriptionTags.length > 0) {
+        tagsContainer = descriptionTags[0].parentElement;
+    } else {
+        tagsContainer = document.createElement("div");
+        tagsContainer.setAttribute("class", "gap-md flex flex-wrap items-center empty:hidden");
+        descContainer.appendChild(tagsContainer);
+    }
+
+    if (!tagsContainer) {
         err('Cannot find date Container');
         return;
     }
 
-    const cleanDate = new Date(currentDate);
+    const spanDatePubliTag = createDateTag("Modifié le ", new Date(currentDate));    
 
-    const spanDateTag = createDateTag(cleanDate);
+    if (spanDatePubliTag) {
+        spanDatePubliTag.setAttribute("id", "old_date_to_display_modified");
+        tagsContainer.prepend(spanDatePubliTag);
+    }
 
-    dateContainer.insertBefore(spanDateTag, referenceTag);
+    if (oldDate) {
+        const spanDateModifTag = createDateTag("Publié le ", new Date(oldDate));
+
+        if (spanDateModifTag) {
+            spanDateModifTag.setAttribute("id", "old_date_to_display_published");
+            tagsContainer.prepend(spanDateModifTag);
+        }
+    }
 }
 
 function enhanceArticleDescriptionDisplay(article) {
@@ -152,6 +167,12 @@ function moveProtection(article) {
     const divProtection = document.evaluate("//section[contains(., 'Protection leboncoin')]", article, null, XPathResult.ANY_TYPE, null).iterateNext();
 
     moveDivAside(article, divProtection, "protection");
+}
+
+function moveProtectionVoyageur(article) {
+    const divProtectionVoyageur = document.evaluate("//h2[contains(., 'Protection Voyageur')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
+
+    moveDivAside(article, divProtectionVoyageur, "protectionVoyageur");
 }
 
 function movePackSerenite(article) {

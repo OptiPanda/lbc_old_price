@@ -76,14 +76,14 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
 
     const pOldDate = document.createElement("p");
     pOldDate.setAttribute("class", currentDateClass);
-    pOldDate.innerHTML = "Mise en ligne le " + dateFormatter(oldDate);
+    pOldDate.innerHTML = "Mise en ligne le " + dateFormatter(new Date(oldDate));
 
     divOldDate.appendChild(pOldDate);
 
     if (oldDate !== currentDate) {
         const pCurrentDate = document.createElement("p");
         pCurrentDate.setAttribute("class", currentDateClass);
-        pCurrentDate.innerHTML = "Mise à jour le " + dateFormatter(currentDate);
+        pCurrentDate.innerHTML = "Mise à jour le " + dateFormatter(new Date(currentDate));
 
         divOldDate.appendChild(pCurrentDate);
         divOldDate.setAttribute("class", "flex flex-col");
@@ -92,26 +92,49 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
     return divOldDate;
 }
 
-function createDateTag(date) {
+function createDateTag(preText, date) {
     const tag = document.createElement("span");
-    tag.setAttribute("id", "date-tag");
-    tag.setAttribute("class", "box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full bg-support-container text-on-support-container mr-md");
+    const gap = getGapWithToday(date);
+    tag.setAttribute("class", ("box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full text-on-support-container mr-md " + (gap.inDays > 30 ? 'bg-alert' : 'bg-support-container')));
     tag.setAttribute("data-spark-component", "tag");
 
     try {
-        tag.innerHTML = "Publié le " + date.toLocaleDateString("fr-FR", {
+        tag.innerHTML = preText + date.toLocaleDateString("fr-FR", {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
-        });
+            hour: "2-digit",
+            minute: "2-digit"
+        }).replace(/\s+/g, ' à ') + gap.asString;
     } catch (e) {
-        alert(e);
+        err(e);
     }
+
     return tag;
 }
 
-function dateFormatter(dateString) {
-    const dateObj = new Date(dateString);
+function getGapWithToday(date) {
+    const gapInMs = new Date().getTime() - date.getTime();
+    const gapInDays = Math.floor(gapInMs / (1000 * 60 * 60 * 24));
+
+    var gapString = "";
+
+    if (gapInDays > 1) {
+        gapString += ` (${gapInDays} jours)`;
+    } else if (gapInDays == 1) {
+        gapString += `  Hier)`;
+    } else if (gapInDays == 0) {
+        if (date.getDate() === new Date().getDate()) {
+            gapString += ` (Aujourd'hui)`;
+        } else {
+            gapString += ` (Hier)`;
+        }
+    }
+
+    return {inDays: gapInDays, inMs: gapInMs, asString: gapString};
+}
+
+function dateFormatter(dateObj) {
 
     const day = dateObj.getDate().toString().padStart(2, '0');
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
@@ -122,21 +145,7 @@ function dateFormatter(dateString) {
     const gapInMs = new Date().getTime() - dateObj.getTime();
     const gapInDays = Math.floor(gapInMs / (1000 * 60 * 60 * 24));
 
-    var formatedDate = `${day}/${month}/${year} à ${hour}h${minutes}`;
-
-    if (gapInDays > 1) {
-        formatedDate += ` ( ${gapInDays} jours )`;
-    } else if (gapInDays == 1) {
-        formatedDate += ` ( Hier )`;
-    } else if (gapInDays == 0) {
-        if (day === new Date().getDate().toString().padStart(2, '0')) {
-            formatedDate += ` ( Aujourd'hui )`;
-        } else {
-            formatedDate += ` ( Hier )`;
-        }
-    }
-
-    return formatedDate;
+    return `${day}/${month}/${year} à ${hour}h${minutes}` + getGapWithToday(dateObj).asString;
 }
 
 function monthDiff(d1, d2) {

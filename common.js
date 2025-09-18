@@ -92,6 +92,23 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
     return divOldDate;
 }
 
+function createDateTag(date) {
+    const tag = document.createElement("span");
+    tag.setAttribute("id", "date-tag");
+    tag.setAttribute("class", "box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full bg-support-container text-on-support-container mr-md");
+
+    try {
+        tag.innerHTML = "Publié le " + date.toLocaleDateString("fr-FR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+        });
+    } catch (e) {
+        alert(e);
+    }
+    return tag;
+}
+
 function dateFormatter(dateString) {
     const dateObj = new Date(dateString);
 

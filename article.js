@@ -7,16 +7,16 @@ async function applyOldPrice4Article(article) {
     currentPostId = postId;
     const datas = await getApiData(postId);
     const oldDate = datas?.first_publication_date
-    
+
     try {
         const currentDate = datas?.index_date;
-        if (oldDate) {    
+        if (oldDate) {
             displayOldDateInElement(article, postId, oldDate, currentDate);
         } else {
             displayOldDateInElement(article, postId, currentDate, currentDate)
         }
     } catch (e) {err(e)}
-    
+
     try {
         const currentPrice = datas?.price[0];
         const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
@@ -27,7 +27,7 @@ async function applyOldPrice4Article(article) {
             displayCurrentPriceInElement(article, postId, currentPrice);
         }
     } catch (e) {err(e)}
-    
+
     try {
         enhanceArticleDescriptionDisplay(article);
     } catch (e) {err(e)}
@@ -59,21 +59,19 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         element.querySelector('[old_date_to_redisplay="true"]')?.removeAttribute("style");
     }
 
-    const oldDateDisplay = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] p.text-caption'))?.find(el => /^(\d{1,2}.+\d{4}).*à.*(\d{2}:\d{2})$/.test(el.textContent));
-    const dateContainer = oldDateDisplay?.parentElement;
+    const referenceTag = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] [data-spark-component="tag"]'))[0];
+    const dateContainer = referenceTag?.parentElement;
 
     if (!dateContainer) {
         err('Cannot find date Container');
         return;
     }
 
-    const currentDateClass = oldDateDisplay.classList;
+    const cleanDate = new Date(currentDate);
 
-    const divOldDate = createDivOldDate(id, currentDateClass, oldDate, currentDate);
+    const spanDateTag = createDateTag(cleanDate);
 
-    oldDateDisplay.setAttribute("old_date_to_redisplay","true")
-    oldDateDisplay.setAttribute("style", "display:none");
-    dateContainer.insertBefore(divOldDate, oldDateDisplay);
+    dateContainer.insertBefore(spanDateTag, referenceTag);
 }
 
 function enhanceArticleDescriptionDisplay(article) {
@@ -85,7 +83,7 @@ function enhanceArticleDescriptionDisplay(article) {
 
         var place = `<a id="goToMap" class="underline inline-flex" title="Aller à la carte">${getPinSvgElement() + oldDesc[0]}</a>`;
 
-        description.innerHTML = 
+        description.innerHTML =
         place
         + splitChar + oldDesc[1]
         + splitChar + spaceDigits(oldDesc[2])
@@ -115,7 +113,7 @@ function enhanceArticleCritereDisplay(article, datas) {
     //     critereKm.querySelector("div").innerHTML = spaceDigits(critereKm.querySelector("div").innerHTML);
 
     //     const kmPan = critereKm.cloneNode(true);
-        
+
     //     const exist = article.querySelector("[data-qa-id='criteria_monthly_mileage']")
     //     if (exist) {
     //         exist.parentElement.removeChild(exist);
@@ -154,7 +152,7 @@ function movePackSerenite(article) {
     moveDivAside(article, divPackSerenite, "packseren");
 }
 
-function moveLesPLus(article) {    
+function moveLesPLus(article) {
     const divLesPlus = document.evaluate("//h2[contains(., 'Les + de cette annonce')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
 
     moveDivAside(article, divLesPlus, "lesplus");

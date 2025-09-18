@@ -59,7 +59,14 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         element.querySelector('[old_date_to_redisplay="true"]')?.removeAttribute("style");
     }
 
-    const referenceTag = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] [data-spark-component="tag"]'))[0];
+    const referenceTags = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] [data-spark-component="tag"]'));
+    for (element of referenceTags) {
+        if (element.id === "date-tag") {
+            err("Date tag already exists");
+            return;
+        }
+    }
+    const referenceTag = referenceTags[0];
     const dateContainer = referenceTag?.parentElement;
 
     if (!dateContainer) {

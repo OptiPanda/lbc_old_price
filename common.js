@@ -96,6 +96,7 @@ function createDateTag(date) {
     const tag = document.createElement("span");
     tag.setAttribute("id", "date-tag");
     tag.setAttribute("class", "box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full bg-support-container text-on-support-container mr-md");
+    tag.setAttribute("data-spark-component", "tag");
 
     try {
         tag.innerHTML = "Publié le " + date.toLocaleDateString("fr-FR", {

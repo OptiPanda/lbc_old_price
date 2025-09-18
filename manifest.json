@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Item Price History - LeBonCoin",
-    "version": "2.2.6.66",
+    "version": "2.2.7.66",
     "background": {
       "scripts": ["background.js"],
       "persistent": false,

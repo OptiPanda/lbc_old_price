@@ -103,10 +103,11 @@ function enhanceArticleDescriptionDisplay(article) {
 function enhanceArticleCritereDisplay(article, datas) {
     // const critereKm = article.querySelector("[data-qa-id='criteria_item_mileage']");
     // const kmAge = datas?.attributes?.filter(o => o.key === 'mileage')[0]?.value;
-    const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
+    // const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
+    const dateMes = Date.parse(datas?.first_publication_date);
     var mDiff = 0;
     if (dateMes) {
-        mDiff = monthDiff(new Date(dateMes.split('/')[0]+"/01/"+dateMes.split('/')[1]), new Date());
+        mDiff = monthDiff(new Date(dateMes), new Date());
     }
 
     // if (critereKm) {

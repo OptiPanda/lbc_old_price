@@ -7,16 +7,16 @@ async function applyOldPrice4Article(article) {
     currentPostId = postId;
     const datas = await getApiData(postId);
     const oldDate = datas?.first_publication_date
-    
+
     try {
         const currentDate = datas?.index_date;
-        if (oldDate) {    
+        if (oldDate) {
             displayOldDateInElement(article, postId, oldDate, currentDate);
         } else {
             displayOldDateInElement(article, postId, currentDate, currentDate)
         }
     } catch (e) {err(e)}
-    
+
     try {
         const currentPrice = datas?.price[0];
         const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
@@ -27,7 +27,7 @@ async function applyOldPrice4Article(article) {
             displayCurrentPriceInElement(article, postId, currentPrice);
         }
     } catch (e) {err(e)}
-    
+
     try {
         enhanceArticleDescriptionDisplay(article);
     } catch (e) {err(e)}
@@ -50,30 +50,50 @@ async function applyOldPrice4Article(article) {
     try {
         moveProtection(article);
     } catch (e) {err(e)}
+    try {
+        moveProtectionVoyageur(article);
+    } catch (e) {err(e)}
 }
 
 function displayOldDateInElement(element, id, oldDate, currentDate) {
-    const exist = element.querySelector('[id^="old_date_to_display_"]');
+    const exist = element.querySelectorAll('[id^="old_date_to_display_"]');
     if (exist) {
-        exist.parentElement.removeChild(exist);
-        element.querySelector('[old_date_to_redisplay="true"]')?.removeAttribute("style");
+         for (element of exist) {
+            element.parentElement.removeChild(element);
+        }
+    }
+    const descContainer = document.querySelector('[data-qa-id="adview_spotlight_description_container"]');
+
+    var tagsContainer;
+    const descriptionTags = Array.from(descContainer.querySelectorAll('[data-spark-component="tag"]'));
+    if (descriptionTags && descriptionTags.length > 0) {
+        tagsContainer = descriptionTags[0].parentElement;
+    } else {
+        tagsContainer = document.createElement("div");
+        tagsContainer.setAttribute("class", "gap-md flex flex-wrap items-center empty:hidden");
+        descContainer.appendChild(tagsContainer);
     }
 
-    const oldDateDisplay = Array.from(document.querySelectorAll('[data-qa-id="adview_spotlight_description_container"] p.text-caption'))?.find(el => /^(\d{1,2}.+\d{4}).*à.*(\d{2}:\d{2})$/.test(el.textContent));
-    const dateContainer = oldDateDisplay?.parentElement;
-
-    if (!dateContainer) {
+    if (!tagsContainer) {
         err('Cannot find date Container');
         return;
     }
 
-    const currentDateClass = oldDateDisplay.classList;
+    const spanDatePubliTag = createDateTag("Modifié le ", new Date(currentDate));    
 
-    const divOldDate = createDivOldDate(id, currentDateClass, oldDate, currentDate);
+    if (spanDatePubliTag) {
+        spanDatePubliTag.setAttribute("id", "old_date_to_display_modified");
+        tagsContainer.prepend(spanDatePubliTag);
+    }
 
-    oldDateDisplay.setAttribute("old_date_to_redisplay","true")
-    oldDateDisplay.setAttribute("style", "display:none");
-    dateContainer.insertBefore(divOldDate, oldDateDisplay);
+    if (oldDate) {
+        const spanDateModifTag = createDateTag("Publié le ", new Date(oldDate));
+
+        if (spanDateModifTag) {
+            spanDateModifTag.setAttribute("id", "old_date_to_display_published");
+            tagsContainer.prepend(spanDateModifTag);
+        }
+    }
 }
 
 function enhanceArticleDescriptionDisplay(article) {
@@ -85,7 +105,7 @@ function enhanceArticleDescriptionDisplay(article) {
 
         var place = `<a id="goToMap" class="underline inline-flex" title="Aller à la carte">${getPinSvgElement() + oldDesc[0]}</a>`;
 
-        description.innerHTML = 
+        description.innerHTML =
         place
         + splitChar + oldDesc[1]
         + splitChar + spaceDigits(oldDesc[2])
@@ -105,17 +125,18 @@ function enhanceArticleDescriptionDisplay(article) {
 function enhanceArticleCritereDisplay(article, datas) {
     // const critereKm = article.querySelector("[data-qa-id='criteria_item_mileage']");
     // const kmAge = datas?.attributes?.filter(o => o.key === 'mileage')[0]?.value;
-    const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
+    // const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
+    const dateMes = Date.parse(datas?.first_publication_date);
     var mDiff = 0;
     if (dateMes) {
-        mDiff = monthDiff(new Date(dateMes.split('/')[0]+"/01/"+dateMes.split('/')[1]), new Date());
+        mDiff = monthDiff(new Date(dateMes), new Date());
     }
 
     // if (critereKm) {
     //     critereKm.querySelector("div").innerHTML = spaceDigits(critereKm.querySelector("div").innerHTML);
 
     //     const kmPan = critereKm.cloneNode(true);
-        
+
     //     const exist = article.querySelector("[data-qa-id='criteria_monthly_mileage']")
     //     if (exist) {
     //         exist.parentElement.removeChild(exist);
@@ -148,13 +169,19 @@ function moveProtection(article) {
     moveDivAside(article, divProtection, "protection");
 }
 
+function moveProtectionVoyageur(article) {
+    const divProtectionVoyageur = document.evaluate("//h2[contains(., 'Protection Voyageur')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
+
+    moveDivAside(article, divProtectionVoyageur, "protectionVoyageur");
+}
+
 function movePackSerenite(article) {
     const divPackSerenite = document.evaluate("//p[contains(., 'Pack Sérénité*')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
 
     moveDivAside(article, divPackSerenite, "packseren");
 }
 
-function moveLesPLus(article) {    
+function moveLesPLus(article) {
     const divLesPlus = document.evaluate("//h2[contains(., 'Les + de cette annonce')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
 
     moveDivAside(article, divLesPlus, "lesplus");

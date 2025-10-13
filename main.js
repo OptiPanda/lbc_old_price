@@ -20,7 +20,7 @@ if (typeof browser !== "undefined") {
 })();
 
 function start() {
-    setTimeout(() => applyOldPrice(), 700)
+    setTimeout(() => applyOldPrice(), 3000)
 }
 
 function applyOldPrice() {
@@ -31,6 +31,10 @@ function applyOldPrice() {
     }
 
     var allAdItems = document.querySelectorAll('[data-qa-id="aditem_container"]');
+
+    if (document.URL === "https://www.leboncoin.fr/favorites") {
+        applyTag4Favorites();
+    }
 
     if (allAdItems) {
         applyOldPrice4ListAds(allAdItems);

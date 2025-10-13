@@ -18,9 +18,7 @@
       "matches": [
         "*://*.leboncoin.fr/*"
       ],
-      "js": [
-        "main.js", "ads.js", "article.js", "common.js"
-      ]
+      "js": ["main.js", "ads.js", "article.js", "common.js", "favorites.js"]
     }
   ]
 }

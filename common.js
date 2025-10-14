@@ -122,7 +122,7 @@ function getGapWithToday(date) {
     if (gapInDays > 1) {
         gapString += ` (${gapInDays} jours)`;
     } else if (gapInDays == 1) {
-        gapString += `  Hier)`;
+        gapString += `  (Hier)`;
     } else if (gapInDays == 0) {
         if (date.getDate() === new Date().getDate()) {
             gapString += ` (Aujourd'hui)`;

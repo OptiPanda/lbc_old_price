@@ -22,7 +22,7 @@ if (typeof browser !== "undefined") {
 function start() {
     document.onreadystatechange = () => {
         if (document.readyState === "complete") {
-            main();
+            setTimeout(main(), 50);
         }
     };
 }

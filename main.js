@@ -20,10 +20,14 @@ if (typeof browser !== "undefined") {
 })();
 
 function start() {
-    setTimeout(() => applyOldPrice(), 3000)
+    document.onreadystatechange = () => {
+        if (document.readyState === "complete") {
+            main();
+        }
+    };
 }
 
-function applyOldPrice() {
+function main() {
     var article = document.querySelector("article#grid");
 
     if (article) {

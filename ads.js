@@ -32,13 +32,12 @@ function displayOldDateInAds(ad, adId, oldDate, currentDate) {
         exist.parentElement.removeChild(exist);
     }
 
-    const dateContainer = ad.querySelector('[data-test-id="ad-params-labels"]')?.parentElement;
+    var dateContainer = ad.querySelector('[data-test-id="image"]~div[class^="adcard_"]>div.flex').firstChild;
     if (dateContainer) {
-        dateContainer.classList.add("flex-col")
         const targetClass = "flex flex-wrap overflow-hidden mt-sm text-caption text-neutral";
-    
         const divOldDate = createDivOldDate(adId, targetClass, oldDate, currentDate);
-    
-        dateContainer.appendChild(divOldDate);
+        dateContainer.after(divOldDate);
+    } else {
+        log("Pas de conteneur de date trouvé");
     }
 }

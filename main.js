@@ -22,7 +22,7 @@ if (typeof browser !== "undefined") {
 function start() {
     document.onreadystatechange = () => {
         if (document.readyState === "complete") {
-            setTimeout(main(), 50);
+            setTimeout(main(), 100);
         }
     };
 }
@@ -42,5 +42,21 @@ function main() {
 
     if (allAdItems) {
         applyOldPrice4ListAds(allAdItems);
+    }
+
+    tagList = Array.from(document.querySelector('[data-qa-id="adview_spotlight_description_container"]').lastChild.children);
+
+    try {
+        tag = tagList.filter(tag => tag.firstChild.nodeName === "svg")[0];
+
+        tag.style.cursor = "pointer";
+
+        tag.addEventListener("click", (event) => {
+            document.getElementById("map").scrollIntoView({
+                behavior: 'smooth'
+            });
+        })
+    } catch (e) {
+        err(`Missing location tag\n${e}`)
     }
 }

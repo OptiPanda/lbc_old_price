@@ -94,7 +94,7 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
 
 function createTag(content, classList = "text-on-support-container bg-support-container") {
     const tag = document.createElement("span");
-    tag.setAttribute("class", ("box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full mr-md " + classList));
+    tag.setAttribute("class", ("box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full " + classList));
     tag.setAttribute("data-spark-component", "tag");
 
     tag.innerHTML = content;

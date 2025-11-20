@@ -92,20 +92,38 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
     return divOldDate;
 }
 
-function createDateTag(preText, date) {
+function createTag(content, classList = "text-on-support-container bg-support-container") {
+    const tag = document.createElement("span");
+    tag.setAttribute("class", ("box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full " + classList));
+    tag.setAttribute("data-spark-component", "tag");
+
+    tag.innerHTML = content;
+    
+    return tag
+}
+
+function createDateTag(preText, date, include_hour = true) {
     const tag = document.createElement("span");
     const gap = getGapWithToday(date);
     tag.setAttribute("class", ("box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full text-on-support-container mr-md " + (gap.inDays > 30 ? 'bg-alert' : 'bg-support-container')));
     tag.setAttribute("data-spark-component", "tag");
 
     try {
-        tag.innerHTML = preText + date.toLocaleDateString("fr-FR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit"
-        }).replace(/\s+/g, ' à ') + gap.asString;
+        if (include_hour) {
+            tag.innerHTML = preText + date.toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).replace(/\s+/g, ' à ') + gap.asString;
+        } else {
+            tag.innerHTML = preText + date.toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            }) + gap.asString;
+        }
     } catch (e) {
         err(e);
     }
@@ -122,7 +140,7 @@ function getGapWithToday(date) {
     if (gapInDays > 1) {
         gapString += ` (${gapInDays} jours)`;
     } else if (gapInDays == 1) {
-        gapString += `  (Hier)`;
+        gapString += ` (Hier)`;
     } else if (gapInDays == 0) {
         if (date.getDate() === new Date().getDate()) {
             gapString += ` (Aujourd'hui)`;
@@ -132,6 +150,12 @@ function getGapWithToday(date) {
     }
 
     return {inDays: gapInDays, inMs: gapInMs, asString: gapString};
+}
+
+function parseDate(dateString){
+    const [year, month, day] = dateString.split('/').reverse().map(n => parseInt(n, 10));
+
+    return new Date(year, month - 1, day);
 }
 
 function dateFormatter(dateObj) {

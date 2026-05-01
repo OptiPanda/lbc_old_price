@@ -9,20 +9,21 @@ async function applyOldPrice4Ad(adItem, opts) {
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value;
     const currentPrice = datas?.price?.[0];
 
+    const oldDate = datas?.first_publication_date;
+    if (opts.showDates && oldDate) {
+        displayOldDateInAds(adItem, adId, oldDate, datas?.index_date);
+    }
+
     if (opts.showOldPrice && oldPrice) {
         displayOldPriceInElement(adItem, adId, oldPrice, currentPrice);
 
         if (opts.showBadge) {
             const pct = Math.round((+oldPrice - +currentPrice) / +oldPrice * 100);
+            debug('badge: adId=' + adId + ' pct=' + pct + ' threshold=' + opts.badgeThreshold + ' show=' + (pct >= opts.badgeThreshold));
             if (pct >= opts.badgeThreshold) {
                 addPriceDropBadge(adItem, pct);
             }
         }
-    }
-
-    const oldDate = datas?.first_publication_date;
-    if (opts.showDates && oldDate) {
-        displayOldDateInAds(adItem, adId, oldDate, datas?.index_date);
     }
 
     if (opts.showMileage) {
@@ -31,9 +32,14 @@ async function applyOldPrice4Ad(adItem, opts) {
 }
 
 function addPriceDropBadge(adItem, pct) {
-    if (adItem.querySelector('.lbc_badge_drop')) return;
+    if (adItem.querySelector('.lbc_badge_drop')) {
+        return;
+    }
     const carousel = adItem.querySelector('[data-spark-component="carousel"]');
-    if (!carousel) return;
+    if (!carousel) {
+        debug('badge: carousel introuvable dans adItem');
+        return;
+    }
 
     const imgContainer = carousel.parentElement; // relative h-full, sans overflow-hidden
 
@@ -57,11 +63,38 @@ function displayOldDateInAds(ad, adId, oldDate, currentDate) {
     const exist = ad.querySelector("[id^='old_date_to_display_']");
     if (exist) exist.remove();
 
-    const insertAfter = ad.querySelector('[data-test-id="image"]~div[class^="adcard_"]>div.flex')?.firstChild
-        || Array.from(ad.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent));
+    const priceRegex = /\d[\d\s]*\s*€/;
+    const priceContainer = Array.from(ad.querySelectorAll('p[aria-hidden="true"]')).find(el => priceRegex.test(el.textContent)).parentElement.parentElement;
+    const descContainer = priceContainer.parentElement;
 
-    if (insertAfter) {
-        const divOldDate = createDivOldDate(adId, "flex flex-wrap overflow-hidden mt-sm text-caption text-neutral", oldDate, currentDate);
-        insertAfter.after(divOldDate);
+    let tagsContainer;
+    const descriptionTags = Array.from(descContainer.querySelectorAll('[data-spark-component="tag"]'));
+    if (descriptionTags.length > 0) {
+        tagsContainer = descriptionTags[0].parentElement;
+    } else {
+        tagsContainer = document.createElement("div");
+        tagsContainer.setAttribute("class", "gap-md flex flex-wrap items-center empty:hidden");
+        descContainer.insertBefore(tagsContainer, priceContainer.nextSibling); // Equivalent insertAfter
+    }
+
+    if (!tagsContainer) {
+        err('Cannot find date Container');
+        return;
+    }
+
+    if (currentDate !== oldDate) {
+        const spanModified = createDateTag("Modifié le ", new Date(currentDate));
+        if (spanModified) {
+            spanModified.setAttribute("id", "old_date_to_display_modified");
+            tagsContainer.prepend(spanModified);
+        }
+    }
+
+    if (oldDate) {
+        const spanPublished = createDateTag("Publié le ", new Date(oldDate));
+        if (spanPublished) {
+            spanPublished.setAttribute("id", "old_date_to_display_published");
+            tagsContainer.prepend(spanPublished);
+        }
     }
 }

@@ -2,8 +2,6 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
     var browser = chrome;
 }
 
-var currentPostId = "";
-
 if (typeof browser !== 'undefined') {
     browser.runtime.onMessage.addListener(function(request) {
         if (request.message === 'lbc_old_price') {
@@ -12,7 +10,7 @@ if (typeof browser !== 'undefined') {
     });
 }
 
-(function() {
+(function () {
     'use strict';
     start();
 })();
@@ -47,7 +45,7 @@ function waitForDomStability(resolve) {
         clearTimeout(timer);
         timer = setTimeout(() => { obs.disconnect(); resolve(); }, DELAY);
     });
-    obs.observe(document.documentElement, { childList: true, subtree: true });
+    obs.observe(document.documentElement, {childList: true, subtree: true});
 }
 
 async function applyOldPrice() {

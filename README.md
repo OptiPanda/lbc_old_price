@@ -27,3 +27,7 @@
 python -m pip install pyinstaller
 ./startRelease.bat
 ```
+
+## Changelog
+
+[Fichier changelog](CHANGELOG.md)

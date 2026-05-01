@@ -168,7 +168,73 @@ function getAdId(url) {
     return url.split("/").pop().split('.')[0];
 }
 
+// Lit les données d'une annonce depuis la balise <script id="__NEXT_DATA__"> du DOM.
+// Fonctionne depuis le content script sans aucune injection ni requête réseau.
+function findAdById(obj, id, depth) {
+    if (depth > 15 || !obj || typeof obj !== 'object') return null;
+    if (String(obj.list_id) === id) return obj;
+    const vals = Array.isArray(obj) ? obj : Object.values(obj);
+    for (const v of vals) {
+        const found = findAdById(v, id, depth + 1);
+        if (found) return found;
+    }
+    return null;
+}
+
+function getAdFromNextData(postId) {
+    try {
+        const el = document.getElementById('__NEXT_DATA__');
+        if (!el) return null;
+        return findAdById(JSON.parse(el.textContent), String(postId), 0);
+    } catch(e) {
+        return null;
+    }
+}
+
 function getApiData(postId) {
-    return fetch(new Request(`https://api.leboncoin.fr/finder/classified/${postId}`))
-        .then((response) => response.json());
+    // Stratégie 1 : __NEXT_DATA__ depuis le DOM (synchrone, aucune injection, aucun problème CSP)
+    const fromDom = getAdFromNextData(postId);
+    if (fromDom) {
+        log('[DEBUG] Données trouvées dans __NEXT_DATA__ pour ' + postId);
+        return Promise.resolve(fromDom);
+    }
+
+    // Stratégie 2 : script injecté via src (interception fetch pour navigation SPA)
+    // Résout avec null après 5s si le script ne répond pas (CSP trop stricte, etc.)
+    return new Promise((resolve) => {
+        const requestId = 'lbc_old_price_' + Math.random().toString(36).substr(2, 9);
+        let settled = false;
+
+        function done(data) {
+            if (settled) return;
+            settled = true;
+            window.removeEventListener('message', handleResponse);
+            resolve(data || null);
+        }
+
+        function handleResponse(event) {
+            if (event.source !== window) return;
+            if (!event.data || event.data.type !== 'LBC_OLD_PRICE_API_RESPONSE' || event.data.requestId !== requestId) return;
+            if (event.data.error) log('[DEBUG] Données indisponibles pour ' + postId + ' : ' + event.data.error);
+            done(event.data.result);
+        }
+
+        window.addEventListener('message', handleResponse);
+        window.postMessage({ type: 'LBC_OLD_PRICE_API_REQUEST', postId, requestId }, '*');
+        setTimeout(() => done(null), 5000);
+    });
+}
+
+// Injection de page_context.js via src (autorisé par la CSP de LBC contrairement aux scripts inline)
+if (!window.lbcOldPriceApiInjected) {
+    window.lbcOldPriceApiInjected = true;
+    try {
+        const extRuntime = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : chrome.runtime;
+        const script = document.createElement('script');
+        script.src = extRuntime.getURL('page_context.js');
+        script.onload = function() { script.remove(); };
+        document.documentElement.appendChild(script);
+    } catch(e) {
+        err('Impossible d\'injecter page_context.js : ' + e);
+    }
 }

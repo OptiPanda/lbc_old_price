@@ -1,0 +1,83 @@
+(function() {
+    window.__lbc_cache = window.__lbc_cache || {};
+    window.__lbc_cache_waiters = window.__lbc_cache_waiters || {};
+
+    function storeAd(ad) {
+        if (!ad || ad.list_id === undefined) return;
+        var id = String(ad.list_id);
+        window.__lbc_cache[id] = ad;
+        if (window.__lbc_cache_waiters[id]) {
+            window.__lbc_cache_waiters[id].forEach(function(fn) { fn(ad); });
+            delete window.__lbc_cache_waiters[id];
+        }
+    }
+
+    function extractAds(obj, depth) {
+        if (depth > 15 || !obj || typeof obj !== 'object') return;
+        if (obj.list_id !== undefined) { storeAd(obj); return; }
+        (Array.isArray(obj) ? obj : Object.values(obj)).forEach(function(v) { extractAds(v, depth + 1); });
+    }
+
+    if (window.__NEXT_DATA__) extractAds(window.__NEXT_DATA__, 0);
+
+    // Intercepter les appels fetch de la page pour les navigations SPA
+    if (!window.__lbc_fetch_intercepted) {
+        window.__lbc_fetch_intercepted = true;
+        var _fetch = window.fetch;
+        window.__lbc_original_fetch = _fetch;
+        window.fetch = async function() {
+            var args = Array.prototype.slice.call(arguments);
+            var res = await _fetch.apply(this, args);
+            try {
+                var url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
+                if (url && (url.indexOf('/finder/classified') !== -1 || url.indexOf('adfinder') !== -1 || url.indexOf('/_next/data') !== -1)) {
+                    res.clone().json().then(function(data) { if (data) extractAds(data, 0); }).catch(function() {});
+                }
+            } catch(e) {}
+            return res;
+        };
+    }
+
+    window.addEventListener('message', async function(event) {
+        if (!event.data || event.data.type !== 'LBC_OLD_PRICE_API_REQUEST') return;
+        var postId = String(event.data.postId);
+        var requestId = event.data.requestId;
+
+        function reply(result, error) {
+            window.postMessage({ type: 'LBC_OLD_PRICE_API_RESPONSE', requestId: requestId, result: result || null, error: (!result && error) ? error : null }, '*');
+        }
+
+        if (window.__lbc_cache[postId]) { reply(window.__lbc_cache[postId]); return; }
+
+        // Attendre que la page fetche elle-même la donnée (navigation SPA)
+        var fromFetch = await new Promise(function(resolve) {
+            if (!window.__lbc_cache_waiters[postId]) window.__lbc_cache_waiters[postId] = [];
+            window.__lbc_cache_waiters[postId].push(resolve);
+            setTimeout(function() {
+                if (window.__lbc_cache_waiters[postId]) {
+                    var i = window.__lbc_cache_waiters[postId].indexOf(resolve);
+                    if (i !== -1) window.__lbc_cache_waiters[postId].splice(i, 1);
+                }
+                resolve(null);
+            }, 3000);
+        });
+        if (fromFetch) { reply(fromFetch); return; }
+
+        // Dernier recours : appel API direct (peut échouer sur captcha)
+        var baseFetch = window.__lbc_original_fetch || window.fetch;
+        var urls = [
+            'https://api.leboncoin.fr/api/adfinder/v1/classified/' + postId,
+            'https://api.leboncoin.fr/finder/classified/' + postId
+        ];
+        var result = null, lastErr = null;
+        for (var j = 0; j < urls.length; j++) {
+            try {
+                var r = await baseFetch(urls[j], { method: 'GET', credentials: 'include', headers: { 'Accept': 'application/json' } });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                result = await r.json();
+                break;
+            } catch(e) { lastErr = e.message; }
+        }
+        reply(result, lastErr);
+    });
+})();

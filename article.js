@@ -1,72 +1,70 @@
-async function applyOldPrice4Article(article) {
+async function applyOldPrice4Article(article, opts) {
     const postId = getPostId();
-    if (!!currentPostId && currentPostId != postId) {
-        location.reload();
-        return;
-    }
     currentPostId = postId;
+
     const datas = await getApiData(postId);
-    const oldDate = datas?.first_publication_date
+    const oldDate = datas?.first_publication_date;
+    const currentDate = datas?.index_date;
+    const currentPrice = datas?.price?.[0];
+    const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value;
+    log('article=' + (article?.id || article?.tagName) + ' price=' + currentPrice + ' oldPrice=' + oldPrice + ' oldDate=' + oldDate);
 
-    try {
-        const currentDate = datas?.index_date;
-        if (oldDate) {
-            displayOldDateInElement(article, postId, oldDate, currentDate);
-        } else {
-            displayOldDateInElement(article, postId, currentDate, currentDate)
-        }
-    } catch (e) {err(e)}
+    if (opts.showDates) {
+        try { displayOldDateInElement(article, postId, oldDate || currentDate, currentDate); } catch (e) { err(e); }
+    }
 
-    try {
-        const currentPrice = datas?.price[0];
-        const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value
+    if (opts.showOldPrice) {
+        try {
+            if (oldPrice) {
+                displayOldPriceInElement(article, postId, oldPrice, currentPrice);
+            } else {
+                displayCurrentPriceInElement(article, postId, currentPrice);
+            }
+        } catch (e) { err(e); }
+    }
 
-        if (oldPrice) {
-            displayOldPriceInElement(article, postId, oldPrice, currentPrice);
-        } else {
-            displayCurrentPriceInElement(article, postId, currentPrice);
-        }
-    } catch (e) {err(e)}
+    if (opts.showHistory && currentPrice) {
+        try {
+            await savePriceToHistory(postId, currentPrice);
+            const history = await getPriceHistory(postId);
+            displayPriceHistory(article, postId, history);
+        } catch (e) { err(e); }
+    }
 
-    try {
-        enhanceArticleDescriptionDisplay(article);
-    } catch (e) {err(e)}
-    try {
-        enhanceArticleCritereDisplay(article, datas);
-    } catch (e) {err(e)}
-    try {
-        enhanceAdviewSticky();
-    } catch (e) {err(e)}
+    if (opts.showCopyButton && datas) {
+        try {
+            const btn = createCopyButton(postId, datas);
+            const historyEl = document.getElementById('lbc_price_history_' + postId);
+            const priceEl = article.querySelector('[id^="old_price_to_display_"]');
+            const anchor = historyEl || priceEl;
+            if (anchor) anchor.after(btn);
+        } catch (e) { err(e); }
+    }
 
-    try {
-        moveLesPLus(article);
-    } catch (e) {err(e)}
-    try {
-        movePackSerenite(article);
-    } catch (e) {err(e)}
-    try {
-        moveAutoviza(article);
-    } catch (e) {err(e)}
-    try {
-        moveProtection(article);
-    } catch (e) {err(e)}
-    try {
-        moveProtectionVoyageur(article);
-    } catch (e) {err(e)}
+    if (opts.showMileage) {
+        try { enhanceAdMileage(article); } catch (e) { err(e); }
+    }
+    try { enhanceArticleDescriptionDisplay(article); } catch (e) { err(e); }
+    try { enhanceArticleCritereDisplay(article, datas); } catch (e) { err(e); }
+    try { enhanceAdviewSticky(); } catch (e) { err(e); }
+    try { moveLesPLus(article); } catch (e) { err(e); }
+    try { movePackSerenite(article); } catch (e) { err(e); }
+    try { moveAutoviza(article); } catch (e) { err(e); }
+    try { moveProtection(article); } catch (e) { err(e); }
+    try { moveProtectionVoyageur(article); } catch (e) { err(e); }
 }
 
 function displayOldDateInElement(element, id, oldDate, currentDate) {
-    const exist = element.querySelectorAll('[id^="old_date_to_display_"]');
-    if (exist) {
-         for (element of exist) {
-            element.parentElement.removeChild(element);
-        }
-    }
-    const descContainer = document.querySelector('[data-qa-id="adview_spotlight_description_container"]');
+    // Fix: use const el pour éviter le shadowing du paramètre element
+    const existing = element.querySelectorAll('[id^="old_date_to_display_"]');
+    for (const el of existing) { el.remove(); }
 
-    var tagsContainer;
+    const descContainer = document.querySelector('[data-qa-id="adview_spotlight_description_container"]');
+    if (!descContainer) { log('displayOldDate: descContainer introuvable'); return; }
+
+    let tagsContainer;
     const descriptionTags = Array.from(descContainer.querySelectorAll('[data-spark-component="tag"]'));
-    if (descriptionTags && descriptionTags.length > 0) {
+    if (descriptionTags.length > 0) {
         tagsContainer = descriptionTags[0].parentElement;
     } else {
         tagsContainer = document.createElement("div");
@@ -74,126 +72,93 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         descContainer.appendChild(tagsContainer);
     }
 
-    if (!tagsContainer) {
-        err('Cannot find date Container');
-        return;
-    }
+    if (!tagsContainer) { err('Cannot find date Container'); return; }
 
-    const spanDatePubliTag = createDateTag("Modifié le ", new Date(currentDate));    
-
-    if (spanDatePubliTag) {
-        spanDatePubliTag.setAttribute("id", "old_date_to_display_modified");
-        tagsContainer.prepend(spanDatePubliTag);
+    const spanModified = createDateTag("Modifié le ", new Date(currentDate));
+    if (spanModified) {
+        spanModified.setAttribute("id", "old_date_to_display_modified");
+        tagsContainer.prepend(spanModified);
     }
 
     if (oldDate) {
-        const spanDateModifTag = createDateTag("Publié le ", new Date(oldDate));
-
-        if (spanDateModifTag) {
-            spanDateModifTag.setAttribute("id", "old_date_to_display_published");
-            tagsContainer.prepend(spanDateModifTag);
+        const spanPublished = createDateTag("Publié le ", new Date(oldDate));
+        if (spanPublished) {
+            spanPublished.setAttribute("id", "old_date_to_display_published");
+            tagsContainer.prepend(spanPublished);
         }
     }
 }
 
 function enhanceArticleDescriptionDisplay(article) {
     const description = article.querySelector("[data-qa-id='adview_spotlight_description_container'] p");
-
-    if (description?.innerHTML.indexOf("•") !== -1 && description?.innerHTML.indexOf("goToMap") === -1)  {
+    if (description?.innerHTML.indexOf("•") !== -1 && description?.innerHTML.indexOf("goToMap") === -1) {
         const splitChar = " • ";
-        const oldDesc = description.innerHTML.split(splitChar);
+        const parts = description.innerHTML.split(splitChar);
 
-        var place = `<a id="goToMap" class="underline inline-flex" title="Aller à la carte">${getPinSvgElement() + oldDesc[0]}</a>`;
-
-        description.innerHTML =
-        place
-        + splitChar + oldDesc[1]
-        + splitChar + spaceDigits(oldDesc[2])
-        + (oldDesc[3] ? splitChar + oldDesc[3] : "")
-        + (oldDesc[4] ? splitChar + oldDesc[4] : "")
-        + (oldDesc[5] ? splitChar + oldDesc[5] : "");
+        description.innerHTML = [
+            `<a id="goToMap" class="underline inline-flex" title="Aller à la carte">${getPinSvgElement() + parts[0]}</a>`,
+            parts[1],
+            spaceDigits(parts[2]),
+            parts[3],
+            parts[4],
+            parts[5],
+        ].filter(Boolean).join(splitChar);
 
         document.getElementById("goToMap").onclick = () => {
             window.scrollTo({
                 behavior: 'smooth',
-                top: document.getElementsByClassName("LazyLoad")[0].getBoundingClientRect().top - document.body.getBoundingClientRect().top - 56,
+                top: document.getElementsByClassName("LazyLoad")[0].getBoundingClientRect().top
+                    - document.body.getBoundingClientRect().top - 56,
             });
         };
     }
 }
 
 function enhanceArticleCritereDisplay(article, datas) {
-    // const critereKm = article.querySelector("[data-qa-id='criteria_item_mileage']");
-    // const kmAge = datas?.attributes?.filter(o => o.key === 'mileage')[0]?.value;
-    // const dateMes = datas?.attributes?.filter(o => o.key === 'issuance_date')[0]?.value;
     const dateMes = Date.parse(datas?.first_publication_date);
-    var mDiff = 0;
-    if (dateMes) {
-        mDiff = monthDiff(new Date(dateMes), new Date());
-    }
-
-    // if (critereKm) {
-    //     critereKm.querySelector("div").innerHTML = spaceDigits(critereKm.querySelector("div").innerHTML);
-
-    //     const kmPan = critereKm.cloneNode(true);
-
-    //     const exist = article.querySelector("[data-qa-id='criteria_monthly_mileage']")
-    //     if (exist) {
-    //         exist.parentElement.removeChild(exist);
-    //     }
-
-    //     if (kmAge && dateMes && mDiff) {
-    //         kmPan.setAttribute("data-qa-id", "criteria_monthly_mileage")
-    //         kmPan.querySelector("div").innerHTML = spaceDigits(kmPan.querySelector("div").innerHTML.replaceAll(`${spaceDigits(kmAge)} km`, `${Math.round(kmAge/mDiff)} km/mois`).replaceAll("Kilométrage", "Kilomètres/mois estimés"));
-    //         critereKm.parentElement.insertBefore(kmPan, critereKm.nextSibling);
-    //     }
-    // }
+    const mDiff = dateMes ? monthDiff(new Date(dateMes), new Date()) : 0;
 
     const critereDatePmes = article.querySelector("[data-qa-id='criteria_item_issuance_date']");
-
     if (critereDatePmes && dateMes) {
-        const age = mDiff/12;
-        critereDatePmes.innerHTML = critereDatePmes.innerHTML.replaceAll(dateMes, `${dateMes} (${Math.round(age * 10) / 10} an${age > 1 ? 's' : ''})`);
+        const age = mDiff / 12;
+        critereDatePmes.innerHTML = critereDatePmes.innerHTML.replaceAll(
+            dateMes,
+            `${dateMes} (${Math.round(age * 10) / 10} an${age > 1 ? 's' : ''})`
+        );
     }
 }
 
 function moveAutoviza(article) {
-    const divAutoviza = document.evaluate("//h2[contains(., 'Autoviza')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
-
-    moveDivAside(article, divAutoviza, "autoviza");
+    const div = document.evaluate("//h2[contains(., 'Autoviza')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
+    moveDivAside(article, div, "autoviza");
 }
 
 function moveProtection(article) {
-    const divProtection = document.evaluate("//section[contains(., 'Protection leboncoin')]", article, null, XPathResult.ANY_TYPE, null).iterateNext();
-
-    moveDivAside(article, divProtection, "protection");
+    const div = document.evaluate("//section[contains(., 'Protection leboncoin')]", article, null, XPathResult.ANY_TYPE, null).iterateNext();
+    moveDivAside(article, div, "protection");
 }
 
 function moveProtectionVoyageur(article) {
-    const divProtectionVoyageur = document.evaluate("//h2[contains(., 'Protection Voyageur')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
-
-    moveDivAside(article, divProtectionVoyageur, "protectionVoyageur");
+    const div = document.evaluate("//h2[contains(., 'Protection Voyageur')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
+    moveDivAside(article, div, "protectionVoyageur");
 }
 
 function movePackSerenite(article) {
-    const divPackSerenite = document.evaluate("//p[contains(., 'Pack Sérénité*')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
-
-    moveDivAside(article, divPackSerenite, "packseren");
+    const div = document.evaluate("//p[contains(., 'Pack Sérénité*')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement?.parentElement;
+    moveDivAside(article, div, "packseren");
 }
 
 function moveLesPLus(article) {
-    const divLesPlus = document.evaluate("//h2[contains(., 'Les + de cette annonce')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
-
-    moveDivAside(article, divLesPlus, "lesplus");
+    const div = document.evaluate("//h2[contains(., 'Les + de cette annonce')]", article, null, XPathResult.ANY_TYPE, null).iterateNext()?.parentElement;
+    moveDivAside(article, div, "lesplus");
 }
 
 function moveDivAside(container, div, type) {
     if (div && !document.querySelector(`[lbc_old_price_move='${type}']`)) {
-
-        div.classList.remove("py-xl","border-b-sm","border-outline")
+        div.classList.remove("py-xl", "border-b-sm", "border-outline");
         const asideRefSection = container.querySelector("aside section");
         const newDiv = document.createElement("div");
-        newDiv.setAttribute(`lbc_old_price_move`,type)
+        newDiv.setAttribute('lbc_old_price_move', type);
         newDiv.innerHTML = `<${asideRefSection.nodeName} class='${asideRefSection.classList}'></${asideRefSection.nodeName}>`;
         newDiv.firstChild.appendChild(div);
         asideRefSection.after(newDiv);
@@ -202,10 +167,9 @@ function moveDivAside(container, div, type) {
 
 function enhanceAdviewSticky() {
     const adviewSticky = document.querySelector("[data-test-id='adview_container']");
-
     if (adviewSticky && !adviewSticky.classList?.contains("cursor-pointer")) {
-        adviewSticky.classList.add("cursor-pointer")
-        adviewSticky.setAttribute("style", "width: -webkit-fill-available")
+        adviewSticky.classList.add("cursor-pointer");
+        adviewSticky.style.width = '-webkit-fill-available';
     }
 }
 

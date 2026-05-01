@@ -1,17 +1,30 @@
 {
   "manifest_version": 3,
   "name": "Item Price History - LeBonCoin",
-  "version": "2.3.0.0",
+  "version": "2.3.2.38",
   "background": {
     "service_worker": "background.js"
   },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": ["storage"],
   "host_permissions": [
     "*://*.leboncoin.fr/*"
   ],
   "description": "Afficher de l'ancien prix de vente ainsi que la date de mise en ligne d'un article sur le site LeBonCoin",
   "homepage_url": "https://github.com/OptiPanda/lbc_old_price",
   "icons": {
-    "48": "icons/icon48.png"
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "content_scripts": [
     {
@@ -19,11 +32,12 @@
         "*://*.leboncoin.fr/*"
       ],
       "js": [
-        "main.js",
+        "common.js",
         "ads.js",
         "article.js",
-        "common.js"
-      ]
+        "main.js"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [

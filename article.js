@@ -1,6 +1,5 @@
 async function applyOldPrice4Article(article, opts) {
     const postId = getPostId();
-    currentPostId = postId;
 
     const datas = await getApiData(postId);
     const oldDate = datas?.first_publication_date;
@@ -10,7 +9,9 @@ async function applyOldPrice4Article(article, opts) {
 
 
     if (opts.showDates) {
-        try { displayOldDateInElement(article, postId, oldDate || currentDate, currentDate); } catch (e) { err(e); }
+        try {
+            displayOldDateInElement(article, postId, oldDate || currentDate, currentDate);
+        } catch (e) { err(e); }
     }
 
     if (opts.showOldPrice) {
@@ -44,23 +45,33 @@ async function applyOldPrice4Article(article, opts) {
     if (opts.showMileage) {
         try { enhanceAdMileage(article); } catch (e) { err(e); }
     }
-    try { enhanceArticleDescriptionDisplay(article); } catch (e) { err(e); }
-    try { enhanceArticleCritereDisplay(article, datas); } catch (e) { err(e); }
-    try { enhanceAdviewSticky(); } catch (e) { err(e); }
-    try { moveLesPLus(article); } catch (e) { err(e); }
-    try { movePackSerenite(article); } catch (e) { err(e); }
-    try { moveAutoviza(article); } catch (e) { err(e); }
-    try { moveProtection(article); } catch (e) { err(e); }
-    try { moveProtectionVoyageur(article); } catch (e) { err(e); }
+
+    [
+        () => enhanceArticleDescriptionDisplay(article),
+        () => enhanceArticleCritereDisplay(article, datas),
+        () => enhanceAdviewSticky(),
+        () => moveLesPLus(article),
+        () => movePackSerenite(article),
+        () => moveAutoviza(article),
+        () => moveProtection(article),
+        () => moveProtectionVoyageur(article),
+    ].forEach((fn) => {
+        try { fn(); } catch (e) {err(e);}
+    });
 }
 
 function displayOldDateInElement(element, id, oldDate, currentDate) {
     // Fix: use const el pour éviter le shadowing du paramètre element
     const existing = element.querySelectorAll('[id^="old_date_to_display_"]');
-    for (const el of existing) { el.remove(); }
+    for (const el of existing) {
+        el.remove();
+    }
 
     const descContainer = document.querySelector('[data-qa-id="adview_spotlight_description_container"]');
-    if (!descContainer) return;
+    if (!descContainer) {
+        debug('displayOldDate: descContainer introuvable');
+        return;
+    }
 
     let tagsContainer;
     const descriptionTags = Array.from(descContainer.querySelectorAll('[data-spark-component="tag"]'));
@@ -72,7 +83,10 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
         descContainer.appendChild(tagsContainer);
     }
 
-    if (!tagsContainer) { err('Cannot find date Container'); return; }
+    if (!tagsContainer) {
+        err('Cannot find date Container');
+        return;
+    }
 
     const spanModified = createDateTag("Modifié le ", new Date(currentDate));
     if (spanModified) {

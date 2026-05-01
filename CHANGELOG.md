@@ -1,6 +1,6 @@
 # Changelog — LBC Old Price
 
-## [2.3.3.0] — 2026-05-01
+## [2.3.3.X] — 2026-05-01
 
 ### Corrections de bugs
 
@@ -11,12 +11,17 @@
 ### Améliorations techniques
 
 - **Déduplication du sélecteur de prix** (`common.js`) : la logique de recherche du conteneur de prix (`[data-qa-id="adview_price"]` + fallback aria + fallback document) était dupliquée dans `displayOldPriceInElement` et `displayCurrentPriceInElement`. Extraite dans une fonction `findPriceContainer(element)`.
-- **Logs de debug supprimés** (`article.js`, `ads.js`) : les `log()` ajoutés pendant le débogage (données d'annonce, calcul du badge, conteneurs introuvables) ont été retirés du code de production.
+- **Logs de debug supprimés** (`article.js`, `ads.js`) : les `log()` ajoutés pendant le débogage (données d'annonce, calcul du badge, conteneurs introuvables) ont été placés en debug avec un feature-flipping permettant ou non l'affichage dans la console.
 - **Commentaire sur l'interception fetch** (`page_context.js`) : ajout d'un commentaire explicatif sur la raison et le mécanisme de l'interception globale de `window.fetch`.
+- **Dates modifs liste annonces** (`ads.js`) : les dates sont affichées comme sur les annonces individuelles via les tags.
+
+### Bugs connus en cours de résolution
+
+- **Firefox/manifest V2 compatibility** (`manifest.firefox.json`) : L'introduction des actions et du cache mémoire n'est pas fonctionnel en l'état sur firefox, le travail sur le retour de la compatibilité est en cours.
 
 ---
 
-## [2.3.2.0] — 2026-05-01
+## [2.3.2.X] — 2026-05-01
 
 ### Corrections de bugs
 
@@ -35,7 +40,7 @@
 
 ---
 
-## [2.3.1.0] — 2026-05-01
+## [2.3.1.X] — 2026-05-01
 
 ### Nouvelles fonctionnalités
 
@@ -64,11 +69,11 @@
 
 ---
 
-## [2.3.0.0] — fork correctif de la v2.2.9
+## [2.3.0.X] — fork correctif de la v2.2.9.X
 
-Fork du dépôt original [OptiPanda/lbc_old_price](https://github.com/OptiPanda/lbc_old_price) corrigeant la version 2.2.9.
+Fork du dépôt original [OptiPanda/lbc_old_price](https://github.com/OptiPanda/lbc_old_price) corrigeant la version 2.2.9.X
 
-### Corrections apportées par rapport à la v2.2.9
+### Corrections apportées par rapport à la v2.2.9.X
 
 - **Lecture des données via `__NEXT_DATA__`** : ajout d'une stratégie de lecture directe dans la balise `<script id="__NEXT_DATA__">` du DOM (synchrone, sans injection ni requête réseau) en premier recours, avant de passer à l'interception des appels `fetch`.
 - **Injection de `page_context.js` via `src`** : l'injection du script de contexte de page passe désormais par un attribut `src` (autorisé par la CSP de LeBonCoin) plutôt que par un script inline bloqué par la politique de sécurité du site.

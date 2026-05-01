@@ -1,11 +1,25 @@
 const extApi = (typeof browser !== 'undefined') ? browser : chrome;
 
-function err(a) { console.error("[LBC_Old_Price | ERROR] - ", a); }
-function log(a) { console.log("[LBC_Old_Price | INFO] - ", a); }
+function err(...a) {
+    console.error("[LBC_Old_Price | ERROR] - ", ...a);
+}
+
+function log(...a) {
+    console.log("[LBC_Old_Price | INFO] - ", ...a);
+}
+
+function debug(...a) {
+    getOptions().then(opts => {
+        if (opts.enableDebug) {
+            console.log("[LBC_Old_Price | DEBUG] - ", ...a)
+        }
+    })
+}
 
 // --- Options ---
 
 const DEFAULT_OPTIONS = {
+    enableDebug: true,
     showOldPrice: true,
     showDates: true,
     showMileage: true,
@@ -19,10 +33,10 @@ function getOptions() {
     return new Promise((resolve) => {
         try {
             extApi.storage.sync.get(DEFAULT_OPTIONS, (items) => {
-                resolve({ ...DEFAULT_OPTIONS, ...(items || {}) });
+                resolve({...DEFAULT_OPTIONS, ...(items || {})});
             });
         } catch (e) {
-            resolve({ ...DEFAULT_OPTIONS });
+            resolve({...DEFAULT_OPTIONS});
         }
     });
 }
@@ -44,10 +58,15 @@ async function savePriceToHistory(adId, price) {
             const history = result[key] || [];
             const today = new Date().toISOString().split('T')[0];
             const last = history[history.length - 1];
-            if (last && last.date === today && last.price === +price) { resolve(); return; }
-            history.push({ price: +price, date: today });
-            if (history.length > MAX_HISTORY_ENTRIES) history.shift();
-            extApi.storage.local.set({ [key]: history }, resolve);
+            if (last?.date === today && last.price === +price) {
+                resolve();
+                return;
+            }
+            history.push({price: +price, date: today});
+            if (history.length > MAX_HISTORY_ENTRIES) {
+                history.shift();
+            }
+            extApi.storage.local.set({[key]: history}, resolve);
         });
     });
 }
@@ -67,6 +86,10 @@ function findPriceContainer(element) {
     return element.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]')
         || Array.from(element.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))
         || document.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]');
+    if (!priceContainer) {
+        debug('displayOldPrice: priceContainer introuvable');
+        return;
+    }
 }
 
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
@@ -103,7 +126,10 @@ function displayCurrentPriceInElement(element, id, currentPrice) {
     element.querySelector('[id^="old_price_to_display_"]')?.remove();
 
     const priceContainer = findPriceContainer(element);
-    if (!priceContainer) return;
+    if (!priceContainer) {
+        debug('displayCurrentPrice: priceContainer introuvable');
+        return;
+    }
 
     priceContainer.closest('.hidden')?.classList.remove('hidden');
     priceContainer.style.display = 'none';
@@ -119,14 +145,16 @@ function displayCurrentPriceInElement(element, id, currentPrice) {
 
 function displayPriceHistory(element, adId, history) {
     document.getElementById('lbc_price_history_' + adId)?.remove();
-    if (!history || history.length < 2) return;
+    if (!history || history.length < 2) {
+        return;
+    }
 
     const container = document.createElement('div');
     container.id = 'lbc_price_history_' + adId;
     container.style.cssText = 'margin-top:8px;font-size:12px;color:#555;border-top:1px solid #eee;padding-top:8px;';
 
     const items = history.map((h, i) => {
-        const label = new Date(h.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const label = new Date(h.date).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'});
         const isLast = i === history.length - 1;
         const color = isLast ? '#e84040' : '#333';
         return `<span style="white-space:nowrap;color:${color}">${label}&nbsp;: <strong>${spaceDigits(h.price)}&nbsp;€</strong></span>`;
@@ -185,10 +213,11 @@ function enhanceAdMileage(adItem) {
     if (!label) return;
     // Liste : valeur = sibling direct du label
     // Annonce : valeur = dans le div frère du parent du label
-    const pMileage = label.nextElementSibling
-        || label.nextSibling
-        || label.parentElement?.nextElementSibling?.querySelector('p, span');
-    if (pMileage) pMileage.innerHTML = spaceDigits(pMileage.innerHTML);
+    const kmageregex = /\d[\d\s]*\s*km/;
+    const pMileage = Array.from(label.parentElement.parentElement.querySelectorAll('p')).find(el => kmageregex.test(el.textContent))
+    if (pMileage) {
+        pMileage.innerHTML = spaceDigits(pMileage.innerHTML);
+    }
 }
 
 function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
@@ -235,7 +264,7 @@ function getGapWithToday(date) {
     if (gapInDays > 1) gapString = ` (${gapInDays} jours)`;
     else if (gapInDays === 1) gapString = ' (Hier)';
     else if (gapInDays === 0) gapString = date.getDate() === new Date().getDate() ? " (Aujourd'hui)" : ' (Hier)';
-    return { inDays: gapInDays, inMs: gapInMs, asString: gapString };
+    return {inDays: gapInDays, inMs: gapInMs, asString: gapString};
 }
 
 function dateFormatter(dateObj) {
@@ -311,7 +340,7 @@ function getApiData(postId) {
         }
 
         window.addEventListener('message', handleResponse);
-        window.postMessage({ type: 'LBC_OLD_PRICE_API_REQUEST', postId, requestId }, '*');
+        window.postMessage({type: 'LBC_OLD_PRICE_API_REQUEST', postId, requestId}, '*');
         setTimeout(() => done(null), 5000);
     });
 }
@@ -322,7 +351,9 @@ if (!window.lbcOldPriceApiInjected) {
         const extRuntime = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : chrome.runtime;
         const script = document.createElement('script');
         script.src = extRuntime.getURL('page_context.js');
-        script.onload = function() { script.remove(); };
+        script.onload = function () {
+            script.remove();
+        };
         document.documentElement.appendChild(script);
     } catch (e) {
         err('Impossible d\'injecter page_context.js : ' + e);

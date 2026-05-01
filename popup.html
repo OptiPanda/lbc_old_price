@@ -104,16 +104,40 @@
     }
     footer a { color: #e84040; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    .hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>LBC Old Price</h1>
+    <h1 id="header">LBC Old Price</h1>
     <p>Paramètres de l'extension</p>
   </header>
 
   <div class="section-title">Affichage</div>
+
+  <div class="option-row hidden" id="showDebugOption">
+      <div class="option-label">
+          Debug
+          <small>Ajoute des logs de debug dans la console</small>
+      </div>
+      <label class="toggle">
+          <input type="checkbox" id="enableDebug">
+          <span class="slider"></span>
+      </label>
+  </div>
 
   <div class="option-row">
     <div class="option-label">

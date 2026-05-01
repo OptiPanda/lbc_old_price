@@ -7,7 +7,7 @@ async function applyOldPrice4Article(article, opts) {
     const currentDate = datas?.index_date;
     const currentPrice = datas?.price?.[0];
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value;
-    log('article=' + (article?.id || article?.tagName) + ' price=' + currentPrice + ' oldPrice=' + oldPrice + ' oldDate=' + oldDate);
+
 
     if (opts.showDates) {
         try { displayOldDateInElement(article, postId, oldDate || currentDate, currentDate); } catch (e) { err(e); }
@@ -60,7 +60,7 @@ function displayOldDateInElement(element, id, oldDate, currentDate) {
     for (const el of existing) { el.remove(); }
 
     const descContainer = document.querySelector('[data-qa-id="adview_spotlight_description_container"]');
-    if (!descContainer) { log('displayOldDate: descContainer introuvable'); return; }
+    if (!descContainer) return;
 
     let tagsContainer;
     const descriptionTags = Array.from(descContainer.querySelectorAll('[data-spark-component="tag"]'));

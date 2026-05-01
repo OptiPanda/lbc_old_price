@@ -1,5 +1,21 @@
 # Changelog — LBC Old Price
 
+## [2.3.3.0] — 2026-05-01
+
+### Corrections de bugs
+
+- **Pourcentage de baisse affiché négatif** (`common.js`) : `reduction = currentPrice - oldPrice` produisait une valeur négative, affichant "-25.1%" au lieu de "25.1%". Corrigé en `reduction = oldPrice - currentPrice`.
+- **Fuite mémoire dans `__lbc_cache_waiters`** (`page_context.js`) : après l'expiration du timeout, l'entrée vide restait dans l'objet. Ajout d'un `delete` si le tableau est vide après le splice.
+- **Pas de feedback visuel si la copie échoue** (`common.js`) : le `.catch()` du presse-papier ne faisait que logger en console. Le bouton affiche désormais "Échec de la copie" avec une icône rouge pendant 2,5 secondes.
+
+### Améliorations techniques
+
+- **Déduplication du sélecteur de prix** (`common.js`) : la logique de recherche du conteneur de prix (`[data-qa-id="adview_price"]` + fallback aria + fallback document) était dupliquée dans `displayOldPriceInElement` et `displayCurrentPriceInElement`. Extraite dans une fonction `findPriceContainer(element)`.
+- **Logs de debug supprimés** (`article.js`, `ads.js`) : les `log()` ajoutés pendant le débogage (données d'annonce, calcul du badge, conteneurs introuvables) ont été retirés du code de production.
+- **Commentaire sur l'interception fetch** (`page_context.js`) : ajout d'un commentaire explicatif sur la raison et le mécanisme de l'interception globale de `window.fetch`.
+
+---
+
 ## [2.3.2.0] — 2026-05-01
 
 ### Corrections de bugs

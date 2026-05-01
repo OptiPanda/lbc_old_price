@@ -1,5 +1,24 @@
 # Changelog — LBC Old Price
 
+## [2.3.2.0] — 2026-05-01
+
+### Corrections de bugs
+
+- **Ordre de chargement des scripts** (`manifest.json`) : `common.js` était chargé en dernier, rendant `getOptions()` indisponible au moment où `main.js` l'appelait. Ordre corrigé : `common.js` → `ads.js` → `article.js` → `main.js`.
+- **Sélecteur de prix introuvable sur page annonce** (`common.js`) : `element.querySelectorAll()` cherchait `[data-qa-id="adview_price"]` dans `article#grid`, mais cet élément se trouve en dehors de l'article. Ajout d'un fallback `document.querySelector()`.
+- **Div `hidden` masquant le prix** (`common.js`) : LeBonCoin enveloppe le bloc prix dans `<div class="custom:block hidden">` sur mobile. La classe `hidden` est maintenant retirée avant l'injection de notre affichage.
+- **Contenu effacé par le re-render React** (`main.js`) : nos modifications du DOM déclenchaient une erreur d'hydratation React (erreur #418) qui réinitialisait le DOM. Remplacement de la résolution immédiate par `waitForDomStability()` : attente de 800 ms sans mutation DOM avant d'appliquer les enrichissements.
+- **Badge rouge non affiché** (`ads.js`) : le sélecteur `[data-test-id="image"]` a été supprimé par LeBonCoin. Remplacé par `[data-spark-component="carousel"]` avec positionnement sur son élément parent.
+- **Prix non affiché sur les cartes liste** (`common.js`) : les sélecteurs `[data-test-id="price"]` et `[data-qa-id="adview_price"]` n'existent plus dans les cartes de résultats. Ajout d'un fallback par recherche du `<p aria-hidden="true">` contenant un montant en euros.
+- **Date non affichée sur les cartes liste** (`ads.js`) : le sélecteur `[data-test-id="image"]~div[class^="adcard_"]` ne fonctionne plus. Fallback sur le `<p aria-hidden="true">` du prix comme point d'ancrage.
+- **Kilométrage non formaté sur page annonce** (`common.js`, `article.js`) : `enhanceAdMileage` n'était appelé que sur les cartes liste. Ajout de l'appel dans `applyOldPrice4Article`. De plus, `nextSibling` remplacé par `nextElementSibling` (saute les nœuds texte), et le XPath étendu de `p` à `*` pour couvrir tous les types d'éléments. Sur la page annonce, la valeur est dans le div frère du parent du label — ajout du fallback `label.parentElement?.nextElementSibling?.querySelector('p, span')`.
+
+### Améliorations
+
+- **Taille du badge de baisse de prix doublée** (`ads.js`) : `font-size` 11 → 22 px, `padding` 2/8 → 4/16 px, `line-height` 18 → 36 px pour une meilleure lisibilité sur les vignettes.
+
+---
+
 ## [2.3.1.0] — 2026-05-01
 
 ### Nouvelles fonctionnalités

@@ -1,14 +1,8 @@
-if (chrome) {
-    browser = chrome;
-}
+const extApi = (typeof browser !== 'undefined') ? browser : chrome;
 
-browser.tabs.onUpdated.addListener(
-    function(tabId, changeInfo, tab) {
-        if (changeInfo.url) {
-            browser.tabs.sendMessage( tabId, {
-                message: 'lbc_old_price',
-                url: changeInfo.url
-            })
-        }
+extApi.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+    if (changeInfo.url) {
+        extApi.tabs.sendMessage(tabId, { message: 'lbc_old_price', url: changeInfo.url })
+            .catch(() => {});
     }
-);
+});

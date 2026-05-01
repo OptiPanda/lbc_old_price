@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>LBC Old Price — Options</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      width: 290px;
+      background: #fff;
+      color: #1a1a1a;
+    }
+
+    header {
+      background: #e84040;
+      color: #fff;
+      padding: 13px 16px 11px;
+    }
+    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+    header p { font-size: 11px; opacity: .75; margin-top: 1px; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: #999;
+      padding: 10px 16px 4px;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 16px;
+      border-bottom: 1px solid #f2f2f2;
+      gap: 10px;
+    }
+    .option-row:last-child { border-bottom: none; }
+
+    .option-label { flex: 1; line-height: 1.3; }
+    .option-label small { display: block; color: #999; font-size: 11px; margin-top: 1px; }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 34px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #d0d0d0;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: background .18s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      left: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .18s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    }
+    input:checked + .slider { background: #e84040; }
+    input:checked + .slider::before { transform: translateX(16px); }
+
+    /* Threshold row */
+    .threshold-row {
+      padding: 8px 16px 12px;
+      border-bottom: 1px solid #f2f2f2;
+      display: none;
+    }
+    .threshold-row.visible { display: block; }
+    .threshold-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: #555;
+    }
+    .threshold-header strong { color: #e84040; }
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      accent-color: #e84040;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 10px;
+      color: #bbb;
+      border-top: 1px solid #f2f2f2;
+    }
+    footer a { color: #e84040; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>LBC Old Price</h1>
+    <p>Paramètres de l'extension</p>
+  </header>
+
+  <div class="section-title">Affichage</div>
+
+  <div class="option-row">
+    <div class="option-label">
+      Ancien prix
+      <small>Baisse de prix avec écart en % sur les annonces</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="showOldPrice">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="option-row">
+    <div class="option-label">
+      Dates de publication
+      <small>Date de mise en ligne et de dernière modification</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="showDates">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="option-row">
+    <div class="option-label">
+      Kilométrage formaté
+      <small>Espacement des milliers dans le kilométrage</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="showMileage">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="section-title">Listes d'annonces</div>
+
+  <div class="option-row">
+    <div class="option-label">
+      Badge baisse de prix
+      <small>Pastille rouge sur les vignettes en liste</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="showBadge">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="threshold-row" id="badgeThresholdRow">
+    <div class="threshold-header">
+      <span>Seuil minimum du badge</span>
+      <strong id="thresholdVal">5%</strong>
+    </div>
+    <input type="range" id="badgeThreshold" min="1" max="50" value="5">
+  </div>
+
+  <div class="section-title">Page d'annonce</div>
+
+  <div class="option-row">
+    <div class="option-label">
+      Historique des prix
+      <small>Mémorise et affiche les prix observés lors de vos visites</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="showHistory">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="option-row">
+    <div class="option-label">
+      Bouton copier
+      <small>Copie titre, prix, dates et URL en un clic</small>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="showCopyButton">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <footer>
+    LBC Old Price v2.3.1 &mdash;
+    <a href="https://github.com/OptiPanda/lbc_old_price" target="_blank">GitHub</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

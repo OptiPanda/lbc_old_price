@@ -1,7 +1,7 @@
 const extApi = (typeof browser !== 'undefined') ? browser : chrome;
 
 const DEFAULTS = {
-    enableDebug: true,
+    enableDebug: false,
     showOldPrice: true,
     showDates: true,
     showMileage: true,

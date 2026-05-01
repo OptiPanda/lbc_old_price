@@ -19,7 +19,7 @@ function debug(...a) {
 // --- Options ---
 
 const DEFAULT_OPTIONS = {
-    enableDebug: true,
+    enableDebug: false,
     showOldPrice: true,
     showDates: true,
     showMileage: true,

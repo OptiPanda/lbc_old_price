@@ -14,7 +14,6 @@ async function applyOldPrice4Ad(adItem, opts) {
 
         if (opts.showBadge) {
             const pct = Math.round((+oldPrice - +currentPrice) / +oldPrice * 100);
-            log('badge: adId=' + adId + ' pct=' + pct + ' threshold=' + opts.badgeThreshold + ' show=' + (pct >= opts.badgeThreshold));
             if (pct >= opts.badgeThreshold) {
                 addPriceDropBadge(adItem, pct);
             }
@@ -34,7 +33,7 @@ async function applyOldPrice4Ad(adItem, opts) {
 function addPriceDropBadge(adItem, pct) {
     if (adItem.querySelector('.lbc_badge_drop')) return;
     const carousel = adItem.querySelector('[data-spark-component="carousel"]');
-    if (!carousel) { log('badge: carousel introuvable dans adItem'); return; }
+    if (!carousel) return;
 
     const imgContainer = carousel.parentElement; // relative h-full, sans overflow-hidden
 
@@ -64,7 +63,5 @@ function displayOldDateInAds(ad, adId, oldDate, currentDate) {
     if (insertAfter) {
         const divOldDate = createDivOldDate(adId, "flex flex-wrap overflow-hidden mt-sm text-caption text-neutral", oldDate, currentDate);
         insertAfter.after(divOldDate);
-    } else {
-        log("Pas de conteneur de date trouvé");
     }
 }

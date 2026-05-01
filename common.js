@@ -63,17 +63,21 @@ async function getPriceHistory(adId) {
 
 // --- Affichage ---
 
+function findPriceContainer(element) {
+    return element.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]')
+        || Array.from(element.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))
+        || document.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]');
+}
+
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     element.querySelector('[id^="old_price_to_display_"]')?.remove();
 
-    const priceContainer = element.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]')
-        || Array.from(element.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))
-        || document.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]');
-    if (!priceContainer) { log('displayOldPrice: priceContainer introuvable'); return; }
+    const priceContainer = findPriceContainer(element);
+    if (!priceContainer) return;
 
     priceContainer.closest('.hidden')?.classList.remove('hidden');
 
-    const reduction = (+currentPrice - +oldPrice);
+    const reduction = +oldPrice - +currentPrice;
     const percentReduceDisplay = Math.round(reduction / oldPrice * 1000) / 10;
 
     priceContainer.style.display = 'none';
@@ -98,10 +102,8 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
 function displayCurrentPriceInElement(element, id, currentPrice) {
     element.querySelector('[id^="old_price_to_display_"]')?.remove();
 
-    const priceContainer = element.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]')
-        || Array.from(element.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))
-        || document.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]');
-    if (!priceContainer) { log('displayCurrentPrice: priceContainer introuvable'); return; }
+    const priceContainer = findPriceContainer(element);
+    if (!priceContainer) return;
 
     priceContainer.closest('.hidden')?.classList.remove('hidden');
     priceContainer.style.display = 'none';
@@ -148,6 +150,7 @@ function createCopyButton(adId, datas) {
 
     const iconCopy = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;flex-shrink:0"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`;
     const iconDone = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;flex-shrink:0;color:#2a9d2a"><path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 20.9 7.1l-1.4-1.4z"/></svg>`;
+    const iconErr = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;flex-shrink:0;color:#e84040"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
 
     btn.innerHTML = iconCopy + ' Copier les infos';
 
@@ -168,7 +171,10 @@ function createCopyButton(adId, datas) {
         navigator.clipboard.writeText(lines).then(() => {
             btn.innerHTML = iconDone + ' Copié !';
             setTimeout(() => { btn.innerHTML = iconCopy + ' Copier les infos'; }, 2500);
-        }).catch(() => err('Clipboard non disponible'));
+        }).catch(() => {
+            btn.innerHTML = iconErr + ' Échec de la copie';
+            setTimeout(() => { btn.innerHTML = iconCopy + ' Copier les infos'; }, 2500);
+        });
     };
 
     return btn;

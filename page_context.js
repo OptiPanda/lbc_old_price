@@ -20,7 +20,10 @@
 
     if (window.__NEXT_DATA__) extractAds(window.__NEXT_DATA__, 0);
 
-    // Intercepter les appels fetch de la page pour les navigations SPA
+    // Intercepte window.fetch globalement pour capturer les réponses API de LeBonCoin
+    // lors des navigations SPA (Next.js router). Nécessaire car les content scripts
+    // n'ont pas accès aux requêtes réseau de la page — cette injection via page_context.js
+    // s'exécute dans le contexte de la page et peut donc intercepter fetch.
     if (!window.__lbc_fetch_intercepted) {
         window.__lbc_fetch_intercepted = true;
         var _fetch = window.fetch;
@@ -57,6 +60,7 @@
                 if (window.__lbc_cache_waiters[postId]) {
                     var i = window.__lbc_cache_waiters[postId].indexOf(resolve);
                     if (i !== -1) window.__lbc_cache_waiters[postId].splice(i, 1);
+                    if (window.__lbc_cache_waiters[postId].length === 0) delete window.__lbc_cache_waiters[postId];
                 }
                 resolve(null);
             }, 3000);

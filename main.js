@@ -58,6 +58,6 @@ async function applyOldPrice() {
 
     const allAdItems = document.querySelectorAll('[data-qa-id="aditem_container"]');
     if (allAdItems.length > 0) {
-        applyOldPrice4ListAds(allAdItems, opts);
+        applyOldPrice4ListAds(allAdItems, opts, (article || false));
     }
 }

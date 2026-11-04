@@ -39,7 +39,8 @@
         "ads.js",
         "article.js",
         "main.js"
-      ]
+      ],
+      "css": ["lbc_old_price.css"]
     }
   ],
   "web_accessible_resources": ["page_context.js"]

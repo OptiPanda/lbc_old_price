@@ -1,5 +1,13 @@
 # Changelog — LBC Old Price
 
+## [Non publié]
+
+### Corrections de bugs
+
+- **Prix "undefined €" sur les dons** (`common.js`, `article.js`) — #72 : les annonces sans prix (dons, mais aussi emplois, services...) n'ont pas de champ `price` dans l'API, et l'extension affichait "undefined €" (et "NaN %" si un ancien prix existait). Ajout de `hasPrice()` : sans prix, l'affichage natif de LeBonCoin est conservé et le bouton "Copier les infos" se place après le prix natif. Un prix à 0 € reste affiché.
+
+---
+
 ## [2.3.3.X] — 2026-05-01
 
 ### Corrections de bugs

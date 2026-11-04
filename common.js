@@ -82,6 +82,12 @@ async function getPriceHistory(adId) {
 
 // --- Affichage ---
 
+// Les annonces sans prix (dons, emplois, services...) n'ont pas de champ `price` dans l'API.
+// Un prix à 0 reste valide.
+function hasPrice(price) {
+    return price !== null && price !== undefined && price !== '' && !isNaN(+price);
+}
+
 function findPriceContainer(element) {
     return element.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]')
         || Array.from(element.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))
@@ -93,6 +99,11 @@ function findPriceContainer(element) {
 }
 
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
+    if (!hasPrice(currentPrice) || !hasPrice(oldPrice)) {
+        displayCurrentPriceInElement(element, id, currentPrice);
+        return;
+    }
+
     element.querySelector('[id^="old_price_to_display_"]')?.remove();
 
     const priceContainer = findPriceContainer(element);
@@ -128,6 +139,13 @@ function displayCurrentPriceInElement(element, id, currentPrice) {
     const priceContainer = findPriceContainer(element);
     if (!priceContainer) {
         debug('displayCurrentPrice: priceContainer introuvable');
+        return;
+    }
+
+    if (!hasPrice(currentPrice)) {
+        // Pas de prix (ex : don) : on laisse l'affichage natif de LeBonCoin
+        priceContainer.style.display = '';
+        debug('displayCurrentPrice: pas de prix pour ' + id);
         return;
     }
 

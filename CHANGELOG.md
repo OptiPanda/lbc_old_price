@@ -1,6 +1,6 @@
 # Changelog — LBC Old Price
 
-## [Non publié]
+## [2.3.4.X] — 2026-11-04
 
 ### Corrigé
 - Les annonces sans prix (dons, emplois, services) n'affichent plus « undefined € » ni « NaN € (NaN%) » : le prix natif de LeBonCoin reste visible quand l'API ne renvoie pas de champ `price` (#72, #73)

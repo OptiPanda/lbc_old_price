@@ -37,7 +37,6 @@ async function applyOldPrice4Article(article, opts) {
             const btn = createCopyButton(postId, datas);
             const historyEl = document.getElementById('lbc_price_history_' + postId);
             const priceEl = article.querySelector('[id^="old_price_to_display_"]');
-            // Sans prix (ex : don), on n'injecte pas notre prix : on se place après le prix natif
             const anchor = historyEl || priceEl || findPriceContainer(article);
             if (anchor) anchor.after(btn);
         } catch (e) { err(e); }

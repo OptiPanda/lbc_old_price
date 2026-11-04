@@ -37,6 +37,7 @@
         "article.js",
         "main.js"
       ],
+      "css": ["lbc_old_price.css"],
       "run_at": "document_idle"
     }
   ],

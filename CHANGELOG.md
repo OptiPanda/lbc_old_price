@@ -2,9 +2,15 @@
 
 ## [Non publié]
 
-### Corrections de bugs
+### Corrigé
+- Les annonces sans prix (dons, emplois, services) n'affichent plus « undefined € » ni « NaN € (NaN%) » : le prix natif de LeBonCoin reste visible quand l'API ne renvoie pas de champ `price` (#72, #73)
+- Le bouton « Copier les infos » s'accroche désormais au prix natif quand aucun prix n'est injecté, et n'est plus absent sur les dons (#73)
+- Correction du prix et des annonces dans la page d'article (#73)
 
-- **Prix "undefined €" sur les dons** (`common.js`, `article.js`) — #72 : les annonces sans prix (dons, mais aussi emplois, services...) n'ont pas de champ `price` dans l'API, et l'extension affichait "undefined €" (et "NaN %" si un ancien prix existait). Ajout de `hasPrice()` : sans prix, l'affichage natif de LeBonCoin est conservé et le bouton "Copier les infos" se place après le prix natif. Un prix à 0 € reste affiché.
+### Modifié
+- Ajout de `hasPrice(price)` dans `common.js` : elle renvoie faux pour `null`, `undefined`, une chaîne vide ou `NaN`, et un prix à 0 reste valide
+- `displayOldPriceInElement` passe par `displayCurrentPriceInElement` quand le prix actuel ou l'ancien prix est manquant, y compris dans la liste d'annonces (`ads.js`)
+- Retrait des commentaires dans le code
 
 ---
 

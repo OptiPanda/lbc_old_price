@@ -1,18 +1,13 @@
-async function applyOldPrice4ListAds(allAdItems, opts) {
-    await Promise.all([...allAdItems].map(adItem => applyOldPrice4Ad(adItem, opts)));
+async function applyOldPrice4ListAds(allAdItems, opts, inAd) {
+    await Promise.all([...allAdItems].map(adItem => applyOldPrice4Ad(adItem, opts, inAd)));
 }
 
-async function applyOldPrice4Ad(adItem, opts) {
+async function applyOldPrice4Ad(adItem, opts, inAd) {
     const adId = getAdId(adItem.querySelector('[href]').getAttribute('href'));
     const datas = await getApiData(adId);
 
     const oldPrice = datas?.attributes?.filter(o => o.key === 'old_price')[0]?.value;
-    const currentPrice = datas?.price?.[0];
-
-    const oldDate = datas?.first_publication_date;
-    if (opts.showDates && oldDate) {
-        displayOldDateInAds(adItem, adId, oldDate, datas?.index_date);
-    }
+    const currentPrice = datas?.price?.[0] ?? 0;
 
     if (opts.showOldPrice && oldPrice) {
         displayOldPriceInElement(adItem, adId, oldPrice, currentPrice);
@@ -24,6 +19,11 @@ async function applyOldPrice4Ad(adItem, opts) {
                 addPriceDropBadge(adItem, pct);
             }
         }
+    }
+
+    const oldDate = datas?.first_publication_date;
+    if (opts.showDates && oldDate) {
+        displayOldDateInAds(adItem, adId, oldDate, datas?.index_date, inAd);
     }
 
     if (opts.showMileage) {
@@ -59,12 +59,16 @@ function addPriceDropBadge(adItem, pct) {
     imgContainer.appendChild(badge);
 }
 
-function displayOldDateInAds(ad, adId, oldDate, currentDate) {
+function displayOldDateInAds(ad, adId, oldDate, currentDate, inAd = false) {
     const exist = ad.querySelector("[id^='old_date_to_display_']");
     if (exist) exist.remove();
 
-    const priceRegex = /\d[\d\s]*\s*€/;
-    const priceContainer = Array.from(ad.querySelectorAll('p[aria-hidden="true"]')).find(el => priceRegex.test(el.textContent)).parentElement.parentElement;
+    const priceRegex = /(\d[\d\s]*\s*€)|(Don \(gratuit\))/;
+    const priceContainer = Array.from(ad.querySelectorAll('p.sr-only,p[aria-hidden="true"],div[aria-hidden="true"]>span')).find(el => priceRegex.test(el.textContent))?.parentElement?.parentElement;
+    if (!priceContainer) {
+        err('Cannot find price Container :', adId);
+        return;
+    }
     const descContainer = priceContainer.parentElement;
 
     let tagsContainer;
@@ -74,7 +78,7 @@ function displayOldDateInAds(ad, adId, oldDate, currentDate) {
     } else {
         tagsContainer = document.createElement("div");
         tagsContainer.setAttribute("class", "gap-md flex flex-wrap items-center empty:hidden");
-        descContainer.insertBefore(tagsContainer, priceContainer.nextSibling); // Equivalent insertAfter
+        descContainer.insertBefore(tagsContainer, priceContainer.nextSibling);
     }
 
     if (!tagsContainer) {
@@ -82,19 +86,19 @@ function displayOldDateInAds(ad, adId, oldDate, currentDate) {
         return;
     }
 
-    if (currentDate !== oldDate) {
-        const spanModified = createDateTag("Modifié le ", new Date(currentDate));
-        if (spanModified) {
-            spanModified.setAttribute("id", "old_date_to_display_modified");
-            tagsContainer.prepend(spanModified);
+    if (oldDate) {
+        const spanPublished = createDateTag("Publié le ", new Date(oldDate), inAd ? 2 : 1);
+        if (spanPublished) {
+            spanPublished.setAttribute("id", "old_date_to_display_published");
+            tagsContainer.append(spanPublished);
         }
     }
 
-    if (oldDate) {
-        const spanPublished = createDateTag("Publié le ", new Date(oldDate));
-        if (spanPublished) {
-            spanPublished.setAttribute("id", "old_date_to_display_published");
-            tagsContainer.prepend(spanPublished);
+    if (currentDate !== oldDate) {
+        const spanModified = createDateTag("Modifié le ", new Date(currentDate), inAd ? 2 : 1);
+        if (spanModified) {
+            spanModified.setAttribute("id", "old_date_to_display_modified");
+            tagsContainer.append(spanModified);
         }
     }
 }

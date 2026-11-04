@@ -1,0 +1,14 @@
+div[class~="*:shrink-0"]:has(:is([id^="old_price_to_display"], [id^="old_date_to_display"])) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+div[class~="*:shrink-0"] div:is(
+    :has(:is([id^="old_price_to_display"], [id^="old_date_to_display"])),
+    [id^="old_price_to_display"],
+    [id^="old_date_to_display"]
+) {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}

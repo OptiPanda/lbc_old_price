@@ -88,23 +88,19 @@ function hasPrice(price) {
 
 function findPriceContainer(element) {
     return element.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]')
-        || Array.from(element.querySelectorAll('p[aria-hidden="true"]')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))
+        || Array.from(element.querySelectorAll('p[aria-hidden="true"],div[aria-hidden="true"]>span')).find(el => /\d[\d\s]*\s*€/.test(el.textContent))?.parentElement
         || document.querySelector('[data-qa-id="adview_price"], [data-test-id="price"]');
     if (!priceContainer) {
-        debug('displayOldPrice: priceContainer introuvable');
+        err('displayOldPrice: priceContainer introuvable', element);
         return;
     }
 }
 
 function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
-    if (!hasPrice(currentPrice) || !hasPrice(oldPrice)) {
-        displayCurrentPriceInElement(element, id, currentPrice);
-        return;
-    }
-
     element.querySelector('[id^="old_price_to_display_"]')?.remove();
 
     const priceContainer = findPriceContainer(element);
+    log("OldPrice in element", id, oldPrice, currentPrice, priceContainer);
     if (!priceContainer) return;
 
     priceContainer.closest('.hidden')?.classList.remove('hidden');
@@ -131,6 +127,19 @@ function displayOldPriceInElement(element, id, oldPrice, currentPrice) {
     </div>`.trim());
 }
 
+function allowShrink(container) {
+    let node = container;
+    while (node && node.parentElement) {
+        node.style.minWidth = "0";
+        node.style.maxWidth = "100%";
+        if (node.parentElement.classList.contains("*:shrink-0")) {
+            node.style.flexShrink = "1";
+            break;
+        }
+        node = node.parentElement;
+    }
+}
+
 function displayCurrentPriceInElement(element, id, currentPrice) {
     element.querySelector('[id^="old_price_to_display_"]')?.remove();
 
@@ -140,19 +149,13 @@ function displayCurrentPriceInElement(element, id, currentPrice) {
         return;
     }
 
-    if (!hasPrice(currentPrice)) {
-        priceContainer.style.display = '';
-        debug('displayCurrentPrice: pas de prix pour ' + id);
-        return;
-    }
-
     priceContainer.closest('.hidden')?.classList.remove('hidden');
     priceContainer.style.display = 'none';
     priceContainer.insertAdjacentHTML('beforebegin', `
     <div id="old_price_to_display_${id}" class="flex flex-wrap items-center mr-md">
         <div class="mr-md flex flex-wrap items-center justify-between">
             <div class="flex">
-                <p class="text-headline-2">${spaceDigits(currentPrice)}&nbsp;€</p>&nbsp;
+                <p class="text-headline-2">${hasPrice(currentPrice) && currentPrice > 0 ? spaceDigits(currentPrice)+" €" : "Don (gratuit)"}</p>&nbsp;
             </div>
         </div>
     </div>`.trim());
@@ -226,8 +229,6 @@ function createCopyButton(adId, datas) {
 function enhanceAdMileage(adItem) {
     const label = document.evaluate(".//*[text()='Kilométrage']", adItem, null, XPathResult.ANY_TYPE, null).iterateNext();
     if (!label) return;
-    // Liste : valeur = sibling direct du label
-    // Annonce : valeur = dans le div frère du parent du label
     const kmageregex = /\d[\d\s]*\s*km/;
     const pMileage = Array.from(label.parentElement.parentElement.querySelectorAll('p')).find(el => kmageregex.test(el.textContent))
     if (pMileage) {
@@ -256,17 +257,40 @@ function createDivOldDate(id, currentDateClass, oldDate, currentDate) {
     return divOldDate;
 }
 
-function createDateTag(preText, date) {
+function createDateTag(preText, date, lines = 1) {
     const tag = document.createElement("span");
     const gap = getGapWithToday(date);
-    tag.setAttribute("class", "box-border default:inline-flex default:w-fit items-center justify-center gap-sm whitespace-nowrap text-caption font-bold px-md h-sz-20 rounded-full text-on-support-container mr-md "
+    const twoLines = lines >= 2;
+
+    tag.setAttribute("class", "box-border default:inline-flex default:w-fit items-center justify-center whitespace-nowrap text-caption font-bold px-md "
+        + (twoLines ? "flex-col py-xs h-auto rounded-lg text-center " : "gap-sm h-sz-20 rounded-full ")
+        + "text-on-support-container mr-md "
         + (gap.inDays > 30 ? 'bg-alert' : 'bg-support-container'));
     tag.setAttribute("data-spark-component", "tag");
 
     try {
-        tag.innerHTML = preText + date.toLocaleDateString("fr-FR", {
-            year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
-        }).replace(/\s+/g, ' à ') + gap.asString;
+        const dayStr = date.toLocaleDateString("fr-FR", {
+            year: "2-digit", month: "2-digit", day: "2-digit"
+        });
+        const timeStr = date.toLocaleTimeString("fr-FR", {
+            hour: "2-digit", minute: "2-digit"
+        });
+
+        if (twoLines) {
+            tag.style.gap = "0";
+            tag.style.paddingBlock = "4px";
+            tag.style.paddingInline = "12px";
+
+            const line1 = document.createElement("span");
+            line1.innerHTML = preText + dayStr;
+
+            const line2 = document.createElement("span");
+            line2.textContent = "à " + timeStr + " " + gap.asString.trim();
+
+            tag.append(line1, line2);
+        } else {
+            tag.innerHTML = preText + dayStr + " à " + timeStr + gap.asString;
+        }
     } catch (e) { err(e); }
 
     return tag;
@@ -331,7 +355,7 @@ function getApiData(postId) {
     const fromDom = getAdFromNextData(postId);
     if (fromDom) {
         _apiCache.set(postId, fromDom);
-        log('Données trouvées dans __NEXT_DATA__ pour ' + postId);
+        debug('Données trouvées dans __NEXT_DATA__ pour ' + postId);
         return Promise.resolve(fromDom);
     }
 
